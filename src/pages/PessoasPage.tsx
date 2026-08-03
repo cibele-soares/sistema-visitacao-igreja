@@ -19,6 +19,18 @@ type SolicitacaoPessoa = Tables<"pessoas_pendentes">;
 type PessoaForm = Omit<Pessoa, "id">;
 const emptyForm: PessoaForm = { nome: "", telefone: "", endereco: "", observacoes: "" };
 
+function formatarTelefone(valor: string): string {
+  const nums = valor.replace(/\D/g, "").slice(0, 11);
+  if (nums.length <= 2)  return nums.length ? `(${nums}` : "";
+  if (nums.length <= 7)  return `(${nums.slice(0,2)}) ${nums.slice(2)}`;
+  if (nums.length <= 10) return `(${nums.slice(0,2)}) ${nums.slice(2,6)}-${nums.slice(6)}`;
+  return `(${nums.slice(0,2)}) ${nums.slice(2,7)}-${nums.slice(7)}`;
+}
+
+function telefoneValido(tel: string): boolean {
+  return /^\(\d{2}\) \d{4,5}-\d{4}$/.test(tel);
+}
+
 export default function PessoasPage() {
   const { pessoas, criarPessoa, atualizarPessoa, excluirPessoa, refresh } = useAppData();
   const [form, setForm] = useState<PessoaForm>(emptyForm);
@@ -43,8 +55,8 @@ export default function PessoasPage() {
   const setField = (field: keyof PessoaForm, value: string) => setForm((current) => ({ ...current, [field]: value }));
 
   const handleAdd = async () => {
-    if (!form.nome.trim() || !form.endereco.trim()) {
-      toast.error("Nome, telefone, endereço e situação/necessidade são obrigatórios.");
+    if (!form.nome.trim() || !telefoneValido(form.telefone) || !form.endereco.trim() || !form.observacoes.trim()) {
+      toast.error("Nome, telefone válido, endereço e situação/necessidade são obrigatórios.");
       return;
     }
     setSaving(true);
@@ -90,8 +102,8 @@ export default function PessoasPage() {
   };
 
   const saveEdit = async () => {
-    if (!editing?.nome.trim() || !editing.endereco.trim()) {
-      toast.error("Nome e endereço são obrigatórios.");
+    if (!editing?.nome.trim() || !telefoneValido(editing.telefone) || !editing.endereco.trim() || !editing.observacoes.trim()) {
+      toast.error("Nome, telefone válido, endereço e situação/necessidade são obrigatórios.");
       return;
     }
     setSaving(true);
@@ -115,10 +127,18 @@ export default function PessoasPage() {
           <Card>
             <CardHeader><CardTitle className="font-serif text-lg">Novo cadastro</CardTitle></CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5"><Label htmlFor="nome">Nome completo *</Label><Input value={form.nome} onChange={(event) => setField("nome", event.target.value)} /></div>
-              <div className="space-y-1.5"><Label htmlFor="telefone">Telefone / WhatsApp *</Label><Input value={form.telefone} onChange={(event) => setField("telefone", event.target.value)} required/></div>
-              <div className="space-y-1.5 sm:col-span-2"><Label htmlFor="endereco">Endereço *</Label><Input value={form.endereco} onChange={(event) => setField("endereco", event.target.value)} /></div>
-              <div className="space-y-1.5 sm:col-span-2"><Label htmlFor="observacoes">Situação / Necessidade *</Label><Textarea value={form.observacoes} onChange={(event) => setField("observacoes", event.target.value)} required/></div>
+              <div className="space-y-1.5"><Label htmlFor="nome">Nome completo *</Label><Input value={form.nome} onChange={(event) => setField("nome", event.target.value)} placeholder="Nome da pessoa" /></div>
+              <div className="space-y-1.5">
+                <Label htmlFor="telefone">Telefone / WhatsApp *</Label>
+                <Input
+                  value={form.telefone}
+                  onChange={(event) => setField("telefone", formatarTelefone(event.target.value))}
+                  placeholder="(00) 00000-0000"
+                  maxLength={15}
+                />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2"><Label htmlFor="endereco">Endereço *</Label><Input value={form.endereco} onChange={(event) => setField("endereco", event.target.value)} placeholder="Rua, número, bairro" /></div>
+              <div className="space-y-1.5 sm:col-span-2"><Label htmlFor="observacoes">Situação / Necessidade *</Label><Textarea value={form.observacoes} onChange={(event) => setField("observacoes", event.target.value)} placeholder="Descreva brevemente a situação e por que essa pessoa precisa de uma visita…" rows={3} /></div>
               <div className="sm:col-span-2"><Button disabled={saving} onClick={() => void handleAdd()}><Plus className="mr-2 h-4 w-4" />{saving ? "Salvando…" : "Cadastrar"}</Button></div>
             </CardContent>
           </Card>
@@ -137,7 +157,7 @@ export default function PessoasPage() {
       </Tabs>
 
       <Dialog open={Boolean(editing)} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent><DialogHeader><DialogTitle>Editar pessoa</DialogTitle></DialogHeader>{editing && <div className="space-y-3"><div><Label>Nome</Label><Input value={editing.nome} onChange={(event) => setEditing({ ...editing, nome: event.target.value })} /></div><div><Label>Telefone</Label><Input value={editing.telefone} onChange={(event) => setEditing({ ...editing, telefone: event.target.value })} /></div><div><Label>Endereço</Label><Input value={editing.endereco} onChange={(event) => setEditing({ ...editing, endereco: event.target.value })} /></div><div><Label>Observações</Label><Textarea value={editing.observacoes} onChange={(event) => setEditing({ ...editing, observacoes: event.target.value })} /></div></div>}<DialogFooter><Button variant="outline" onClick={() => setEditing(null)}>Cancelar</Button><Button disabled={saving} onClick={() => void saveEdit()}>Salvar</Button></DialogFooter></DialogContent>
+        <DialogContent><DialogHeader><DialogTitle>Editar pessoa</DialogTitle></DialogHeader>{editing && <div className="space-y-3"><div><Label>Nome</Label><Input value={editing.nome} onChange={(event) => setEditing({ ...editing, nome: event.target.value })} placeholder="Nome da pessoa" /></div><div><Label>Telefone</Label><Input value={editing.telefone} onChange={(event) => setEditing({ ...editing, telefone: formatarTelefone(event.target.value) })} placeholder="(00) 00000-0000" maxLength={15} /></div><div><Label>Endereço</Label><Input value={editing.endereco} onChange={(event) => setEditing({ ...editing, endereco: event.target.value })} placeholder="Rua, número, bairro" /></div><div><Label>Observações</Label><Textarea value={editing.observacoes} onChange={(event) => setEditing({ ...editing, observacoes: event.target.value })} placeholder="Descreva brevemente a situação e por que essa pessoa precisa de uma visita…" /></div></div>}<DialogFooter><Button variant="outline" onClick={() => setEditing(null)}>Cancelar</Button><Button disabled={saving} onClick={() => void saveEdit()}>Salvar</Button></DialogFooter></DialogContent>
       </Dialog>
     </div>
   );
