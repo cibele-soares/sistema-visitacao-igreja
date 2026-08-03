@@ -35,9 +35,9 @@ export type Database = {
         { id?: string; nome?: string; telefone?: string; disponibilidade?: string; eh_lider?: boolean; codigo?: string; casa_oracao?: string; created_at?: string }
       >;
       alimentos: Table<
-        { id: string; nome: string; quantidade: number; unidade: string; data_entrada: string; casa_oracao: string; created_at: string },
-        { id?: string; nome: string; quantidade?: number; unidade?: string; data_entrada?: string; casa_oracao?: string; created_at?: string },
-        { id?: string; nome?: string; quantidade?: number; unidade?: string; data_entrada?: string; casa_oracao?: string; created_at?: string }
+        { id: string; nome: string; quantidade: number; unidade: string; data_entrada: string; casa_oracao: string; inserido_por: string | null; created_at: string },
+        { id?: string; nome: string; quantidade?: number; unidade?: string; data_entrada?: string; casa_oracao?: string; inserido_por?: string | null; created_at?: string },
+        { id?: string; nome?: string; quantidade?: number; unidade?: string; data_entrada?: string; casa_oracao?: string; inserido_por?: string | null; created_at?: string }
       >;
       grupos: Table<
         { id: string; nome: string; lider_id: string | null; created_at: string },
@@ -184,3 +184,4 @@ export type TablesInsert<T extends keyof Database["public"]["Tables"]> =
   Database["public"]["Tables"][T]["Insert"];
 export type TablesUpdate<T extends keyof Database["public"]["Tables"]> =
   Database["public"]["Tables"][T]["Update"];
+  

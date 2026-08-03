@@ -113,7 +113,7 @@ export default function AlimentosPage() {
         <Card>
           <CardContent className="p-0">
             <Table>
-            <TableHeader><TableRow><TableHead>Alimento</TableHead><TableHead>Qtd.</TableHead><TableHead className="hidden sm:table-cell">Unidade</TableHead><TableHead className="hidden sm:table-cell">Casa de Oração</TableHead><TableHead className="hidden sm:table-cell">Entrada</TableHead><TableHead className="w-12" /></TableRow></TableHeader>              <TableBody>
+            <TableHeader><TableRow><TableHead>Alimento</TableHead><TableHead>Qtd.</TableHead><TableHead className="hidden sm:table-cell">Unidade</TableHead><TableHead className="hidden sm:table-cell">Casa de Oração</TableHead><TableHead className="hidden sm:table-cell">Entrada</TableHead><TableHead className="hidden sm:table-cell">Cadastrado por</TableHead><TableHead className="w-12" /></TableRow></TableHeader>              <TableBody>
                 {alimentos.map((alimento) => (
                   <TableRow key={alimento.id}>
                     <TableCell className="font-medium">{alimento.nome}</TableCell>
@@ -121,6 +121,7 @@ export default function AlimentosPage() {
                     <TableCell className="hidden sm:table-cell">{alimento.unidade}</TableCell>
                     <TableCell className="hidden sm:table-cell">{alimento.casaOracao}</TableCell>
                     <TableCell className="hidden sm:table-cell">{new Date(`${alimento.dataEntrada}T00:00:00`).toLocaleDateString("pt-BR")}</TableCell>
+                    <TableCell className="hidden sm:table-cell text-muted-foreground">{alimento.inseridoPorNome}</TableCell>
                     <TableCell><Button variant="ghost" size="icon" onClick={() => void handleRemove(alimento.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                   </TableRow>
                 ))}

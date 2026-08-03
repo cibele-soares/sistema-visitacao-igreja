@@ -27,6 +27,7 @@ export interface Alimento {
   unidade: string;
   dataEntrada: string;
   casaOracao: string;
+  inseridoPorNome: string;
 }
 
 export interface Grupo {
@@ -56,7 +57,7 @@ export interface Visita {
 
 export type PessoaInput = Omit<Pessoa, "id">;
 export type VoluntarioInput = Omit<Voluntario, "id" | "ehLider">;
-export type AlimentoInput = Omit<Alimento, "id">;
+export type AlimentoInput = Omit<Alimento, "id" | "inseridoPorNome">;
 
 interface AppDataContextValue {
   pessoas: Pessoa[];
@@ -92,7 +93,7 @@ function messageFromError(error: unknown): string {
 }
 
 export function AppDataProvider({ children }: { children: React.ReactNode }) {
-  const { isAdmin, loading: authLoading } = useAuth();
+  const { isAdmin, perfil, loading: authLoading } = useAuth();
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
   const [voluntarios, setVoluntarios] = useState<Voluntario[]>([]);
   const [alimentos, setAlimentos] = useState<Alimento[]>([]);
@@ -121,7 +122,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
     setLoading(true);
     try {
-      const [pessoasRes, voluntariosRes, alimentosRes, gruposRes, grupoVolsRes, visitasRes, cestaRes] = await Promise.all([
+      const [pessoasRes, voluntariosRes, alimentosRes, gruposRes, grupoVolsRes, visitasRes, cestaRes, perfisRes] = await Promise.all([
         supabase.from("pessoas").select("*").order("nome"),
         supabase.from("voluntarios").select("*").order("nome"),
         supabase.from("alimentos").select("*").order("nome"),
@@ -129,12 +130,15 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         supabase.from("grupo_voluntarios").select("*"),
         supabase.from("visitas").select("*").order("created_at", { ascending: false }),
         supabase.from("visita_cesta_itens").select("*"),
+        supabase.from("perfis").select("id, nome"),
       ]);
 
-      const firstError = [pessoasRes, voluntariosRes, alimentosRes, gruposRes, grupoVolsRes, visitasRes, cestaRes]
+      const firstError = [pessoasRes, voluntariosRes, alimentosRes, gruposRes, grupoVolsRes, visitasRes, cestaRes, perfisRes]
         .map((result) => result.error)
         .find(Boolean);
       if (firstError) throw firstError;
+
+      const nomeById = new Map((perfisRes.data ?? []).map((perfil) => [perfil.id, perfil.nome]));
 
       const nextPessoas: Pessoa[] = (pessoasRes.data ?? []).map((row) => ({
         id: row.id,
@@ -161,6 +165,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         unidade: row.unidade,
         dataEntrada: row.data_entrada,
         casaOracao: row.casa_oracao,
+        inseridoPorNome: (row.inserido_por && nomeById.get(row.inserido_por)) || "—",
       }));
 
       const memberships = grupoVolsRes.data ?? [];
@@ -326,10 +331,13 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       nome: input.nome.trim(), quantidade: input.quantidade, unidade: input.unidade.trim(), data_entrada: input.dataEntrada, casa_oracao: input.casaOracao.trim(),
     }).select().single();
     if (error) throw error;
-    const alimento: Alimento = { id: data.id, nome: data.nome, quantidade: data.quantidade, unidade: data.unidade, dataEntrada: data.data_entrada, casaOracao: data.casa_oracao, };
+    const alimento: Alimento = {
+      id: data.id, nome: data.nome, quantidade: data.quantidade, unidade: data.unidade, dataEntrada: data.data_entrada, casaOracao: data.casa_oracao,
+      inseridoPorNome: perfil?.nome ?? "—",
+    };
     setAlimentos((current) => [...current, alimento].sort((a, b) => a.nome.localeCompare(b.nome)));
     return alimento;
-  }, []);
+  }, [perfil]);
 
   const excluirAlimento = useCallback(async (id: string) => {
     const { error } = await supabase.from("alimentos").delete().eq("id", id);
