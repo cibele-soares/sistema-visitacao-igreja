@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Check, Copy, Crown, Pencil, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { type Voluntario, useAppData } from "@/context/AppData";
@@ -86,9 +86,7 @@ function PresencaTab() {
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
 
-  useEffect(() => { void loadPresencas(); }, [data]);
-
-  const loadPresencas = async () => {
+  const loadPresencas = useCallback(async () => {
     setLoading(true);
     const { data: rows, error } = await supabase.from("presencas").select("*").eq("data", data);
     setLoading(false);
@@ -96,7 +94,9 @@ function PresencaTab() {
     const map: Record<string, boolean> = {};
     for (const row of rows ?? []) map[row.voluntario_id] = row.presente;
     setPresencas(map);
-  };
+  }, [data]);
+
+  useEffect(() => { void loadPresencas(); }, [loadPresencas]);
 
   const toggle = async (voluntarioId: string, checked: boolean) => {
     setSavingId(voluntarioId);
