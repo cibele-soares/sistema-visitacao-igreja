@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 33% 97%;
+    --foreground: 220 30% 15%;
+
+    --card: 40 30% 99%;
+    --card-foreground: 220 30% 15%;
+
+    --popover: 40 30% 99%;
+    --popover-foreground: 220 30% 15%;
+
+    --primary: 220 55% 28%;
+    --primary-foreground: 40 30% 97%;
+
+    --secondary: 40 45% 90%;
+    --secondary-foreground: 220 30% 15%;
+
+    --muted: 40 20% 93%;
+    --muted-foreground: 220 15% 45%;
+
+    --accent: 38 80% 55%;
+    --accent-foreground: 220 30% 12%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 40 20% 88%;
+    --input: 40 20% 88%;
+    --ring: 220 55% 28%;
+
+    --radius: 0.625rem;
+
+    --sidebar-background: 220 55% 22%;
+    --sidebar-foreground: 40 30% 92%;
+    --sidebar-primary: 38 80% 55%;
+    --sidebar-primary-foreground: 220 30% 12%;
+    --sidebar-accent: 220 50% 30%;
+    --sidebar-accent-foreground: 40 30% 95%;
+    --sidebar-border: 220 45% 28%;
+    --sidebar-ring: 38 80% 55%;
+
+    --success: 145 60% 40%;
+    --success-foreground: 0 0% 100%;
+
+    --warm-glow: 38 90% 60%;
+  }
+
+  .dark {
+    --background: 220 30% 8%;
+    --foreground: 40 20% 92%;
+    --card: 220 30% 11%;
+    --card-foreground: 40 20% 92%;
+    --popover: 220 30% 11%;
+    --popover-foreground: 40 20% 92%;
+    --primary: 38 80% 55%;
+    --primary-foreground: 220 30% 8%;
+    --secondary: 220 30% 16%;
+    --secondary-foreground: 40 20% 92%;
+    --muted: 220 25% 16%;
+    --muted-foreground: 40 15% 55%;
+    --accent: 38 70% 50%;
+    --accent-foreground: 220 30% 8%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 25% 18%;
+    --input: 220 25% 18%;
+    --ring: 38 80% 55%;
+    --sidebar-background: 220 35% 10%;
+    --sidebar-foreground: 40 20% 90%;
+    --sidebar-primary: 38 80% 55%;
+    --sidebar-primary-foreground: 220 30% 8%;
+    --sidebar-accent: 220 30% 16%;
+    --sidebar-accent-foreground: 40 20% 92%;
+    --sidebar-border: 220 25% 15%;
+    --sidebar-ring: 38 80% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Merriweather', serif;
+  }
+}
+
+@layer utilities {
+  .gradient-warm {
+    background: linear-gradient(135deg, hsl(38 80% 55%), hsl(28 85% 50%));
+  }
+  .shadow-warm {
+    box-shadow: 0 4px 20px -4px hsl(38 80% 55% / 0.25);
+  }
+}
