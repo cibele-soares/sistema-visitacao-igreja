@@ -56,9 +56,11 @@ export type Database = {
           pessoa_id: string;
           cesta_itens: string[];
           realizada: boolean;
+          nao_realizada: boolean;
           data_visita: string | null;
           observacoes: string;
           pedido_oracao: string;
+          motivo_nao_realizada: string;
           created_at: string;
         },
         {
@@ -67,9 +69,11 @@ export type Database = {
           pessoa_id: string;
           cesta_itens?: string[];
           realizada?: boolean;
+          nao_realizada?: boolean;
           data_visita?: string | null;
           observacoes?: string;
           pedido_oracao?: string;
+          motivo_nao_realizada?: string;
           created_at?: string;
         },
         {
@@ -78,9 +82,11 @@ export type Database = {
           pessoa_id?: string;
           cesta_itens?: string[];
           realizada?: boolean;
+          nao_realizada?: boolean;
           data_visita?: string | null;
           observacoes?: string;
           pedido_oracao?: string;
+          motivo_nao_realizada?: string;
           created_at?: string;
         }
       >;
@@ -94,7 +100,7 @@ export type Database = {
         { id: string; nome: string; telefone?: string | null; perfil?: "admin" | "voluntario_responsavel"; ativo?: boolean; criado_em?: string },
         { nome?: string; telefone?: string | null }
       >;
-      registros_visitas: Table<
+      registros_visitas: Table <
         {
           id: string;
           visita_id: string;
@@ -103,6 +109,7 @@ export type Database = {
           pedido_oracao: string | null;
           registrado_por: string | null;
           registrado_por_voluntario: string | null;
+          nao_realizada: boolean;
         },
         {
           id?: string;
@@ -112,10 +119,12 @@ export type Database = {
           pedido_oracao?: string | null;
           registrado_por?: string | null;
           registrado_por_voluntario?: string | null;
+          nao_realizada?: boolean;
         },
         {
           relato?: string | null;
           pedido_oracao?: string | null;
+          nao_realizada?: boolean;
         }
       >;
       pessoas_pendentes: Table<
@@ -162,6 +171,14 @@ export type Database = {
         Args: { p_visita_id: string; p_data_visita: string | null; p_observacoes: string; p_pedido_oracao: string };
         Returns: Database["public"]["Tables"]["visitas"]["Row"];
       };
+      marcar_visita_nao_realizada: {
+        Args: { p_visita_id: string; p_motivo: string };
+        Returns: Database["public"]["Tables"]["visitas"]["Row"];
+      };
+      reabrir_visita: {
+        Args: { p_visita_id: string };
+        Returns: Database["public"]["Tables"]["visitas"]["Row"];
+      };
       voluntario_login: {
         Args: { p_codigo: string };
         Returns: { token: string; expires_at: string }[];
@@ -169,6 +186,10 @@ export type Database = {
       voluntario_area: { Args: { p_token: string }; Returns: Json };
       voluntario_finalizar_visita: {
         Args: { p_token: string; p_visita_id: string; p_data_visita: string | null; p_observacoes: string; p_pedido_oracao: string };
+        Returns: Json;
+      };
+      voluntario_marcar_visita_nao_realizada: {
+        Args: { p_token: string; p_visita_id: string; p_motivo: string };
         Returns: Json;
       };
       voluntario_logout: { Args: { p_token: string }; Returns: undefined };

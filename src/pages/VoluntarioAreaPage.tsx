@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, Clock, Crown, Heart, LogOut, Navigation, Phone, Users } from "lucide-react";
+import { CheckCircle2, Church, Clock, Crown, Heart, LogOut, Navigation, Phone, Users, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,8 @@ export default function VoluntarioAreaPage() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [relatos, setRelatos] = useState<Record<string, string>>({});
   const [oracoes, setOracoes] = useState<Record<string, string>>({});
+  const [naoRealizadaModo, setNaoRealizadaModo] = useState<Record<string, boolean>>({});
+  const [motivos, setMotivos] = useState<Record<string, string>>({});
 
   const clearSession = () => {
     sessionStorage.removeItem(VOLUNTEER_TOKEN_KEY);
@@ -60,10 +62,17 @@ export default function VoluntarioAreaPage() {
     navigate("/acesso", { replace: true });
   };
 
+  const isRelatoCompleto = (visitaId: string) =>
+    (relatos[visitaId] ?? "").trim() !== "";
+
   const handleComplete = async (visitaId: string) => {
     const token = sessionStorage.getItem(VOLUNTEER_TOKEN_KEY);
     if (!token) {
       navigate("/acesso", { replace: true });
+      return;
+    }
+    if (!isRelatoCompleto(visitaId)) {
+      toast.error("Preencha o relato antes de concluir.");
       return;
     }
 
@@ -86,13 +95,44 @@ export default function VoluntarioAreaPage() {
     }
   };
 
+  const handleNaoRealizada = async (visitaId: string) => {
+    const token = sessionStorage.getItem(VOLUNTEER_TOKEN_KEY);
+    if (!token) {
+      navigate("/acesso", { replace: true });
+      return;
+    }
+    const motivo = (motivos[visitaId] ?? "").trim();
+    if (!motivo) {
+      toast.error("Informe o motivo da visita não realizada.");
+      return;
+    }
+
+    setSavingId(visitaId);
+    try {
+      const { data, error } = await supabase.rpc("voluntario_marcar_visita_nao_realizada", {
+        p_token: token,
+        p_visita_id: visitaId,
+        p_motivo: motivo,
+      });
+      if (error) throw error;
+      setArea(parseVolunteerArea(data));
+      setNaoRealizadaModo((current) => ({ ...current, [visitaId]: false }));
+      toast.success("Visita registrada como não realizada.");
+    } catch (error) {
+      toast.error(errorMessage(error));
+    } finally {
+      setSavingId(null);
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
   }
   if (!area) return null;
 
   const { voluntario, grupos, voluntarios, pessoas, visitas } = area;
-  const pendentes = visitas.filter((visita) => !visita.realizada);
+  const pendentes = visitas.filter((visita) => !visita.realizada && !visita.naoRealizada);
+  const naoRealizadas = visitas.filter((visita) => visita.naoRealizada && !visita.realizada);
   const realizadas = visitas.filter((visita) => visita.realizada);
   const getPessoa = (id: string) => pessoas.find((pessoa) => pessoa.id === id);
   const getGrupo = (id: string) => grupos.find((grupo) => grupo.id === id);
@@ -101,13 +141,14 @@ export default function VoluntarioAreaPage() {
   return (
     <div className="min-h-screen bg-background pb-10">
       <header className="sticky top-0 z-10 h-14 flex items-center justify-between border-b bg-card/95 backdrop-blur px-4 shadow-sm">
-        <div className="flex items-center gap-3"><div className="w-8 h-8 rounded-lg gradient-warm flex items-center justify-center"><span className="text-sm font-bold">✝</span></div><span className="font-serif text-sm font-semibold">Olá, {voluntario.nome.split(" ")[0]}!</span></div>
+        <div className="flex items-center gap-3"><div className="w-8 h-8 rounded-lg gradient-warm flex items-center justify-center"><Church className="h-4 w-4" style={{ color: "hsl(220 30% 12%)" }} /></div><span className="font-serif text-sm font-semibold">Olá, {voluntario.nome.split(" ")[0]}!</span></div>
         <Button variant="ghost" size="sm" onClick={() => void handleLogout()}><LogOut className="h-4 w-4 mr-1" />Sair</Button>
       </header>
 
       <main className="px-4 pt-6 max-w-lg mx-auto space-y-8 animate-fade-in">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <Card><CardContent className="p-4 text-center"><p className="text-2xl font-serif font-bold text-primary">{pendentes.length}</p><p className="text-xs text-muted-foreground">Pendentes</p></CardContent></Card>
+          <Card><CardContent className="p-4 text-center"><p className="text-2xl font-serif font-bold text-destructive">{naoRealizadas.length}</p><p className="text-xs text-muted-foreground">Não realizadas</p></CardContent></Card>
           <Card><CardContent className="p-4 text-center"><p className="text-2xl font-serif font-bold text-success">{realizadas.length}</p><p className="text-xs text-muted-foreground">Realizadas</p></CardContent></Card>
         </div>
 
@@ -129,6 +170,7 @@ export default function VoluntarioAreaPage() {
           {pendentes.length === 0 ? <Card><CardContent className="p-6 text-center"><CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-success" /><p className="text-sm text-muted-foreground">Todas as visitas estão concluídas.</p></CardContent></Card> : pendentes.map((visita) => {
             const pessoa = getPessoa(visita.pessoaId);
             const grupo = getGrupo(visita.grupoId);
+            const modoNaoRealizada = naoRealizadaModo[visita.id] ?? false;
             return (
               <Card key={visita.id}>
                 <CardContent className="p-4 space-y-3">
@@ -137,14 +179,63 @@ export default function VoluntarioAreaPage() {
                   {pessoa?.telefone && <a href={`tel:${pessoa.telefone}`} className="flex items-center gap-1.5 text-xs text-muted-foreground"><Phone className="h-3 w-3" />{pessoa.telefone}</a>}
                   {pessoa?.observacoes && <p className="text-xs bg-muted rounded-lg px-3 py-2">{pessoa.observacoes}</p>}
                   {visita.cestaItens.length > 0 && <div className="flex flex-wrap gap-1">{visita.cestaItens.map((item) => <Badge key={item.alimentoId} variant="secondary">{item.quantidade} {item.unidade} {item.nome}</Badge>)}</div>}
-                  <Textarea placeholder="Relato da visita…" value={relatos[visita.id] ?? ""} onChange={(event) => setRelatos((current) => ({ ...current, [visita.id]: event.target.value }))} />
-                  <div className="space-y-1"><label className="text-xs text-rose-500 flex items-center gap-1"><Heart className="h-3 w-3" />Pedido de oração</label><Textarea className="border-rose-200" value={oracoes[visita.id] ?? ""} onChange={(event) => setOracoes((current) => ({ ...current, [visita.id]: event.target.value }))} /></div>
-                  <Button className="w-full" disabled={savingId === visita.id} onClick={() => void handleComplete(visita.id)}><CheckCircle2 className="mr-2 h-4 w-4" />{savingId === visita.id ? "Registrando…" : "Marcar como realizada"}</Button>
+
+                  {!modoNaoRealizada ? (
+                    <>
+                      <div className="space-y-1">
+                        <label className="text-xs text-foreground">Relato da visita<span className="text-rose-600"> *</span></label>
+                        <Textarea placeholder="Como foi a visita…" value={relatos[visita.id] ?? ""} onChange={(event) => setRelatos((current) => ({ ...current, [visita.id]: event.target.value }))} required />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-rose-500 flex items-center gap-1"><Heart className="h-3 w-3" />Pedido de oração</label>
+                        <Textarea className="border-rose-200" value={oracoes[visita.id] ?? ""} onChange={(event) => setOracoes((current) => ({ ...current, [visita.id]: event.target.value }))} />
+                      </div>
+                      <Button className="w-full" disabled={savingId === visita.id || !isRelatoCompleto(visita.id)} onClick={() => void handleComplete(visita.id)}>
+                        <CheckCircle2 className="mr-2 h-4 w-4" />{savingId === visita.id ? "Registrando…" : "Marcar como realizada"}
+                      </Button>
+                      <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => setNaoRealizadaModo((current) => ({ ...current, [visita.id]: true }))}>
+                        <XCircle className="mr-2 h-4 w-4" />A visita não foi realizada
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="space-y-1">
+                        <label className="text-xs text-destructive">Motivo da visita não realizada<span className="text-rose-600"> *</span></label>
+                        <Textarea
+                          className="border-destructive/40"
+                          placeholder="Ex.: ninguém estava em casa, endereço não encontrado…"
+                          value={motivos[visita.id] ?? ""}
+                          onChange={(event) => setMotivos((current) => ({ ...current, [visita.id]: event.target.value }))}
+                          required
+                        />
+                      </div>
+                      <Button variant="destructive" className="w-full" disabled={savingId === visita.id || !(motivos[visita.id] ?? "").trim()} onClick={() => void handleNaoRealizada(visita.id)}>
+                        <XCircle className="mr-2 h-4 w-4" />{savingId === visita.id ? "Registrando…" : "Registrar como não realizada"}
+                      </Button>
+                      <Button variant="ghost" className="w-full" onClick={() => setNaoRealizadaModo((current) => ({ ...current, [visita.id]: false }))}>
+                        Cancelar
+                      </Button>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             );
           })}
         </section>
+
+        {naoRealizadas.length > 0 && (
+          <section className="space-y-3">
+            <h2 className="text-base font-serif font-semibold flex items-center gap-2"><XCircle className="h-4 w-4 text-destructive" />Não realizadas</h2>
+            {naoRealizadas.map((visita) => (
+              <Card key={visita.id} className="opacity-90">
+                <CardContent className="py-3 px-4">
+                  <p className="text-sm font-medium">{getPessoa(visita.pessoaId)?.nome ?? "—"}</p>
+                  {visita.motivoNaoRealizada && <p className="text-xs text-muted-foreground mt-1">{visita.motivoNaoRealizada}</p>}
+                </CardContent>
+              </Card>
+            ))}
+          </section>
+        )}
 
         {realizadas.length > 0 && (
           <section className="space-y-3"><h2 className="text-base font-serif font-semibold flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-success" />Realizadas</h2>{realizadas.map((visita) => <Card key={visita.id} className="opacity-75"><CardContent className="py-3 px-4"><p className="text-sm font-medium">{getPessoa(visita.pessoaId)?.nome ?? "—"}</p>{visita.observacoes && <p className="text-xs text-muted-foreground mt-1">{visita.observacoes}</p>}{visita.pedidoOracao && <p className="text-xs text-rose-500 mt-1 flex gap-1"><Heart className="h-3 w-3" />{visita.pedidoOracao}</p>}</CardContent></Card>)}</section>

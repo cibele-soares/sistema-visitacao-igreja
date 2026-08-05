@@ -50,9 +50,11 @@ export interface Visita {
   pessoaId: string;
   cestaItens: CestaItem[];
   realizada: boolean;
+  naoRealizada: boolean;
   dataVisita: string;
   observacoes: string;
   pedidoOracao: string;
+  motivoNaoRealizada: string;
 }
 
 export type PessoaInput = Omit<Pessoa, "id">;
@@ -77,11 +79,13 @@ interface AppDataContextValue {
   excluirAlimento: (id: string) => Promise<void>;
   salvarGrupo: (grupo: Grupo) => Promise<void>;
   excluirGrupo: (id: string) => Promise<void>;
-  criarVisita: (input: Omit<Visita, "id" | "cestaItens" | "realizada">) => Promise<Visita>;
+  criarVisita: (input: Omit<Visita, "id" | "cestaItens" | "realizada" | "naoRealizada" | "motivoNaoRealizada">) => Promise<Visita>;
   atualizarVisita: (visita: Visita) => Promise<void>;
   excluirVisita: (id: string) => Promise<void>;
   definirItemCesta: (visitaId: string, alimentoId: string, quantidade: number) => Promise<void>;
   finalizarVisita: (visitaId: string, dataVisita: string, observacoes: string, pedidoOracao: string) => Promise<void>;
+  marcarVisitaNaoRealizada: (visitaId: string, motivo: string) => Promise<void>;
+  reabrirVisita: (visitaId: string) => Promise<void>;
 }
 
 const AppDataContext = createContext<AppDataContextValue | null>(null);
@@ -185,9 +189,11 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         grupoId: row.grupo_id,
         pessoaId: row.pessoa_id,
         realizada: row.realizada,
+        naoRealizada: row.nao_realizada,
         dataVisita: row.data_visita ?? "",
         observacoes: row.observacoes,
         pedidoOracao: row.pedido_oracao,
+        motivoNaoRealizada: row.motivo_nao_realizada ?? "",
         cestaItens: cestaRows
           .filter((item) => item.visita_id === row.id)
           .map((item) => {
@@ -367,7 +373,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     setVisitas((current) => current.filter((visita) => visita.grupoId !== id));
   }, []);
 
-  const criarVisita = useCallback(async (input: Omit<Visita, "id" | "cestaItens" | "realizada">) => {
+  const criarVisita = useCallback(async (input: Omit<Visita, "id" | "cestaItens" | "realizada" | "naoRealizada" | "motivoNaoRealizada">) => {
     const { data, error } = await supabase.from("visitas").insert({
       grupo_id: input.grupoId,
       pessoa_id: input.pessoaId,
@@ -379,7 +385,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
     const visita: Visita = {
       id: data.id, grupoId: data.grupo_id, pessoaId: data.pessoa_id, cestaItens: [], realizada: data.realizada,
-      dataVisita: data.data_visita ?? "", observacoes: data.observacoes, pedidoOracao: data.pedido_oracao,
+      naoRealizada: data.nao_realizada, dataVisita: data.data_visita ?? "", observacoes: data.observacoes,
+      pedidoOracao: data.pedido_oracao, motivoNaoRealizada: data.motivo_nao_realizada ?? "",
     };
     setVisitas((current) => [visita, ...current]);
     return visita;
@@ -390,9 +397,11 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     grupo_id: visita.grupoId,
     pessoa_id: visita.pessoaId,
     realizada: visita.realizada,
+    nao_realizada: visita.naoRealizada,
     data_visita: visita.dataVisita || null,
     observacoes: visita.observacoes,
     pedido_oracao: visita.pedidoOracao,
+    motivo_nao_realizada: visita.motivoNaoRealizada,
   }).eq("id", visita.id);
   if (error) throw error;
   setVisitas((current) => current.map((item) => item.id === visita.id ? visita : item));
@@ -425,6 +434,21 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     await refresh();
   }, [refresh]);
 
+  const marcarVisitaNaoRealizada = useCallback(async (visitaId: string, motivo: string) => {
+    const { error } = await supabase.rpc("marcar_visita_nao_realizada", {
+      p_visita_id: visitaId,
+      p_motivo: motivo,
+    });
+    if (error) throw error;
+    await refresh();
+  }, [refresh]);
+
+  const reabrirVisita = useCallback(async (visitaId: string) => {
+    const { error } = await supabase.rpc("reabrir_visita", { p_visita_id: visitaId });
+    if (error) throw error;
+    await refresh();
+  }, [refresh]);
+
   const value = useMemo<AppDataContextValue>(() => ({
     pessoas, voluntarios, alimentos, grupos, visitas, loading, refresh,
     criarPessoa, atualizarPessoa, excluirPessoa,
@@ -432,11 +456,12 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     criarAlimento, excluirAlimento,
     salvarGrupo, excluirGrupo,
     criarVisita, atualizarVisita, excluirVisita,
-    definirItemCesta, finalizarVisita,
+    definirItemCesta, finalizarVisita, marcarVisitaNaoRealizada, reabrirVisita,
   }), [
     alimentos, atualizarPessoa, atualizarVisita, atualizarVoluntario, criarAlimento, criarPessoa, criarVisita,
     criarVoluntario, definirItemCesta, excluirAlimento, excluirGrupo, excluirPessoa, excluirVisita,
-    excluirVoluntario, finalizarVisita, grupos, loading, pessoas, refresh, salvarGrupo, visitas, voluntarios,
+    excluirVoluntario, finalizarVisita, marcarVisitaNaoRealizada, reabrirVisita,
+    grupos, loading, pessoas, refresh, salvarGrupo, visitas, voluntarios,
   ]);
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

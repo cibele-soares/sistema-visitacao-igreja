@@ -1,5 +1,5 @@
 import {
-  Apple, Users, UserCheck, UsersRound, Crown, Route, ClipboardCheck, Home, LogOut, UserCircle, type LucideIcon,
+  Apple, Users, UserCheck, UsersRound, Crown, Route, ClipboardCheck, Home, LogOut, UserCircle, type LucideIcon, Church,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/context/AuthContext";
@@ -46,9 +46,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarContent>
         <div className="p-4 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg gradient-warm flex items-center justify-center shrink-0">
-            <span className="text-sm font-bold" style={{ color: "hsl(220 30% 12%)" }}>✝</span>
-          </div>
+          <Church className="w-5 h-5" style={{ color: "rgb(214, 155, 54)" }} />
           {!collapsed && (
             <span className="font-serif font-bold text-sidebar-foreground text-sm leading-tight">
               Visitação<br />da Igreja

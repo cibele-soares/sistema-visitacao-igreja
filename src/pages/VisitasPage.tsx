@@ -81,8 +81,10 @@ export default function VisitasPage() {
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <div><p className="text-xs text-muted-foreground font-semibold">{getGrupoNome(visita.grupoId)}</p><p className="font-bold">{pessoa?.nome ?? "—"}</p><p className="text-sm text-muted-foreground">{pessoa?.endereco}</p></div>
-                  <Badge variant={visita.realizada ? "default" : "outline"}>{visita.realizada ? "Realizada" : "Pendente"}</Badge>
-                </div>
+                    <Badge variant={visita.realizada ? "default" : visita.naoRealizada ? "destructive" : "outline"}>
+                      {visita.realizada ? "Realizada" : visita.naoRealizada ? "Não realizada" : "Pendente"}
+                    </Badge>                
+                  </div>
                 <div className="flex gap-2 flex-wrap">
                   {!visita.realizada && <Button size="sm" onClick={() => void handleFinish(visita.id)}><CheckCircle className="mr-1.5 h-4 w-4" />Concluir</Button>}
                   <Button size="sm" variant="outline" onClick={() => void handleRemove(visita.id)}><Trash2 className="mr-1.5 h-4 w-4" />Remover</Button>

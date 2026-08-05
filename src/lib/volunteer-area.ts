@@ -38,9 +38,11 @@ export function parseVolunteerArea(value: unknown): VolunteerAreaData {
     visitas: (value.visitas as unknown as Array<Omit<Visita, "cestaItens"> & { cestaItens?: CestaItem[] }>).map((visita) => ({
       ...visita,
       cestaItens: visita.cestaItens ?? [],
+      naoRealizada: visita.naoRealizada ?? false,
       dataVisita: visita.dataVisita ?? "",
       observacoes: visita.observacoes ?? "",
       pedidoOracao: visita.pedidoOracao ?? "",
+      motivoNaoRealizada: visita.motivoNaoRealizada ?? "",
     })),
   };
 }
