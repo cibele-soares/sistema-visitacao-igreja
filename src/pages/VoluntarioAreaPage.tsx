@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+type SimNao = "" | "sim" | "nao";
 import { Textarea } from "@/components/ui/textarea";
 
 export default function VoluntarioAreaPage() {
@@ -26,6 +27,7 @@ export default function VoluntarioAreaPage() {
   const [motivos, setMotivos] = useState<Record<string, string>>({});
   const [alimentoForm, setAlimentoForm] = useState({ nome: "", quantidade: "", unidade: "kg", casaOracao: "" });
   const [savingAlimento, setSavingAlimento] = useState(false);
+  const [cestasEntregues, setCestasEntregues] = useState<Record<string, SimNao>>({});
 
   const clearSession = () => {
     sessionStorage.removeItem(VOLUNTEER_TOKEN_KEY);
@@ -78,7 +80,7 @@ export default function VoluntarioAreaPage() {
   };
 
   const isRelatoCompleto = (visitaId: string) =>
-    (relatos[visitaId] ?? "").trim() !== "";
+    (relatos[visitaId] ?? "").trim() !== "" && (cestasEntregues[visitaId] ?? "") !== "";
 
   const handleComplete = async (visitaId: string) => {
     const token = sessionStorage.getItem(VOLUNTEER_TOKEN_KEY);
@@ -87,7 +89,7 @@ export default function VoluntarioAreaPage() {
       return;
     }
     if (!isRelatoCompleto(visitaId)) {
-      toast.error("Preencha o relato antes de concluir.");
+      toast.error("Preencha o relato e informe se a cesta foi entregue antes de concluir.");
       return;
     }
 
@@ -99,6 +101,7 @@ export default function VoluntarioAreaPage() {
         p_data_visita: new Date().toISOString().slice(0, 10),
         p_observacoes: relatos[visitaId] ?? "",
         p_pedido_oracao: oracoes[visitaId] ?? "",
+        p_cesta_entregue: cestasEntregues[visitaId] === "sim",
       });
       if (error) throw error;
       setArea(parseVolunteerArea(data));
@@ -290,6 +293,16 @@ export default function VoluntarioAreaPage() {
                         <Textarea placeholder="Como foi a visita…" value={relatos[visita.id] ?? ""} onChange={(event) => setRelatos((current) => ({ ...current, [visita.id]: event.target.value }))} required />
                       </div>
                       <div className="space-y-1">
+                        <label className="text-xs text-foreground">Cesta entregue?<span className="text-rose-600"> *</span></label>
+                        <Select value={cestasEntregues[visita.id] ?? ""} onValueChange={(value) => setCestasEntregues((current) => ({ ...current, [visita.id]: value as SimNao }))}>
+                          <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sim">Sim</SelectItem>
+                            <SelectItem value="nao">Não</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
                         <label className="text-xs text-rose-500 flex items-center gap-1"><Heart className="h-3 w-3" />Pedido de oração</label>
                         <Textarea className="border-rose-200" value={oracoes[visita.id] ?? ""} onChange={(event) => setOracoes((current) => ({ ...current, [visita.id]: event.target.value }))} />
                       </div>
@@ -341,8 +354,7 @@ export default function VoluntarioAreaPage() {
         )}
 
         {realizadas.length > 0 && (
-          <section className="space-y-3"><h2 className="text-base font-serif font-semibold flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-success" />Realizadas</h2>{realizadas.map((visita) => <Card key={visita.id} className="opacity-75"><CardContent className="py-3 px-4"><p className="text-sm font-medium">{getPessoa(visita.pessoaId)?.nome ?? "—"}</p>{visita.observacoes && <p className="text-xs text-muted-foreground mt-1">{visita.observacoes}</p>}{visita.pedidoOracao && <p className="text-xs text-rose-500 mt-1 flex gap-1"><Heart className="h-3 w-3" />{visita.pedidoOracao}</p>}</CardContent></Card>)}</section>
-        )}
+          <section className="space-y-3"><h2 className="text-base font-serif font-semibold flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-success" />Realizadas</h2>{realizadas.map((visita) => <Card key={visita.id} className="opacity-75"><CardContent className="py-3 px-4 space-y-1"><p className="text-sm font-medium">{getPessoa(visita.pessoaId)?.nome ?? "—"}</p><Badge variant={visita.cestaEntregue ? "secondary" : "outline"}>{visita.cestaEntregue ? "Cesta entregue" : "Cesta não entregue"}</Badge>{visita.observacoes && <p className="text-xs text-muted-foreground mt-1">{visita.observacoes}</p>}{visita.pedidoOracao && <p className="text-xs text-rose-500 mt-1 flex gap-1"><Heart className="h-3 w-3" />{visita.pedidoOracao}</p>}</CardContent></Card>)}</section>        )}
       </main>
     </div>
   );

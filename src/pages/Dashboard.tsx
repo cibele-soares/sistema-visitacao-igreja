@@ -1,6 +1,6 @@
 import { useAppData } from "@/context/AppData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, ClipboardCheck, UsersRound, Route, type LucideIcon } from "lucide-react";
+import { Users, UserCheck, ClipboardCheck, UsersRound, Route, Gift, type LucideIcon } from "lucide-react";
 
 const StatCard = ({ icon: Icon, label, value, color }: { icon: LucideIcon; label: string; value: number; color: string }) => (
   <Card className="hover:shadow-warm transition-shadow">
@@ -17,6 +17,7 @@ const StatCard = ({ icon: Icon, label, value, color }: { icon: LucideIcon; label
 export default function Dashboard() {
   const { pessoas, voluntarios, grupos, visitas } = useAppData();
   const realizadas = visitas.filter((v) => v.realizada).length;
+  const cestasEntregues = visitas.filter((v) => v.cestaEntregue).length;
 
   return (
     <div className="space-y-6">
@@ -32,6 +33,7 @@ export default function Dashboard() {
         <StatCard icon={UsersRound} label="Grupos" value={grupos.length} color="text-primary" />
         <StatCard icon={Route} label="Visitas Agendadas" value={visitas.length} color="text-accent" />
         <StatCard icon={ClipboardCheck} label="Visitas Realizadas" value={realizadas} color="text-success" />
+        <StatCard icon={Gift} label="Cestas Entregues" value={cestasEntregues} color="text-success" />
       </div>
 
       <Card>

@@ -61,6 +61,7 @@ export type Database = {
           observacoes: string;
           pedido_oracao: string;
           motivo_nao_realizada: string;
+          cesta_entregue: boolean;
           created_at: string;
         },
         {
@@ -74,6 +75,7 @@ export type Database = {
           observacoes?: string;
           pedido_oracao?: string;
           motivo_nao_realizada?: string;
+          cesta_entregue?: boolean;
           created_at?: string;
         },
         {
@@ -87,6 +89,7 @@ export type Database = {
           observacoes?: string;
           pedido_oracao?: string;
           motivo_nao_realizada?: string;
+          cesta_entregue: boolean;
           created_at?: string;
         }
       >;
@@ -168,7 +171,7 @@ export type Database = {
         Returns: undefined;
       };
       finalizar_visita: {
-        Args: { p_visita_id: string; p_data_visita: string | null; p_observacoes: string; p_pedido_oracao: string };
+        Args: { p_visita_id: string; p_data_visita: string | null; p_observacoes: string; p_pedido_oracao: string; p_cesta_entregue: boolean };
         Returns: Database["public"]["Tables"]["visitas"]["Row"];
       };
       marcar_visita_nao_realizada: {
@@ -185,7 +188,7 @@ export type Database = {
       };
       voluntario_area: { Args: { p_token: string }; Returns: Json };
       voluntario_finalizar_visita: {
-        Args: { p_token: string; p_visita_id: string; p_data_visita: string | null; p_observacoes: string; p_pedido_oracao: string };
+        Args: { p_token: string; p_visita_id: string; p_data_visita: string | null; p_observacoes: string; p_pedido_oracao: string; p_cesta_entregue: boolean };
         Returns: Json;
       };
       voluntario_marcar_visita_nao_realizada: {

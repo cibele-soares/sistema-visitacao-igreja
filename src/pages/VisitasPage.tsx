@@ -30,7 +30,10 @@ export default function VisitasPage() {
     }
     setSaving(true);
     try {
-      await criarVisita({ grupoId, pessoaId, dataVisita: "", observacoes: "", pedidoOracao: "" });
+      await criarVisita({
+        grupoId, pessoaId, dataVisita: "", observacoes: "", pedidoOracao: "",
+        cestaEntregue: false
+      });
       setPessoaId("");
       toast.success("Visita atribuída.");
     } catch (error) {
@@ -42,7 +45,7 @@ export default function VisitasPage() {
 
   const handleFinish = async (id: string) => {
     try {
-      await finalizarVisita(id, new Date().toISOString().slice(0, 10), "", "");
+    await finalizarVisita(id, new Date().toISOString().slice(0, 10), "", "", false);
       toast.success("Visita marcada como realizada.");
     } catch (error) {
       toast.error(errorMessage(error));

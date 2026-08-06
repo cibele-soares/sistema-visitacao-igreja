@@ -9,11 +9,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Draft {
   dataVisita: string;
   observacoes: string;
   pedidoOracao: string;
+  cestaEntregue: "" | "sim" | "nao";
 }
 
 function Required() {
@@ -36,6 +38,7 @@ export default function RegistrosPage() {
             dataVisita: visita.dataVisita,
             observacoes: visita.observacoes,
             pedidoOracao: visita.pedidoOracao,
+            cestaEntregue: "",
           };
         }
       }
@@ -45,20 +48,19 @@ export default function RegistrosPage() {
 
   const getPessoaNome = (id: string) => pessoas.find((pessoa) => pessoa.id === id)?.nome ?? "—";
   const getGrupoNome = (id: string) => grupos.find((grupo) => grupo.id === id)?.nome ?? "—";
-  const getDraft = (visita: Visita): Draft => drafts[visita.id] ?? { dataVisita: visita.dataVisita, observacoes: visita.observacoes, pedidoOracao: visita.pedidoOracao };
+  const getDraft = (visita: Visita): Draft => drafts[visita.id] ?? { dataVisita: visita.dataVisita, observacoes: visita.observacoes, pedidoOracao: visita.pedidoOracao, cestaEntregue: "" };
 
   const updateDraft = (id: string, field: keyof Draft, value: string) => {
-    setDrafts((current) => ({ ...current, [id]: { ...(current[id] ?? { dataVisita: "", observacoes: "", pedidoOracao: "" }), [field]: value } }));
+    setDrafts((current) => ({ ...current, [id]: { ...(current[id] ?? { dataVisita: "", observacoes: "", pedidoOracao: "", cestaEntregue: "" }), [field]: value } }));
   };
 
   const isDraftCompleto = (draft: Draft) =>
-    draft.dataVisita.trim() !== "" && draft.observacoes.trim() !== "";
-
+    draft.dataVisita.trim() !== "" && draft.observacoes.trim() !== "" && draft.cestaEntregue !== "";
   const saveDraft = async (visita: Visita) => {
     const draft = getDraft(visita);
     setSavingId(visita.id);
     try {
-      await atualizarVisita({ ...visita, ...draft });
+      await atualizarVisita({ ...visita, dataVisita: draft.dataVisita, observacoes: draft.observacoes, pedidoOracao: draft.pedidoOracao, cestaEntregue: draft.cestaEntregue === "sim" });
       toast.success("Registro salvo.");
     } catch (error) {
       toast.error(errorMessage(error));
@@ -70,12 +72,12 @@ export default function RegistrosPage() {
   const complete = async (visita: Visita) => {
     const draft = getDraft(visita);
     if (!isDraftCompleto(draft)) {
-      toast.error("Preencha data e relato antes de concluir.");
+      toast.error("Preencha data, relato e se a cesta foi entregue antes de concluir.");
       return;
     }
     setSavingId(visita.id);
     try {
-      await finalizarVisita(visita.id, draft.dataVisita, draft.observacoes, draft.pedidoOracao);
+      await finalizarVisita(visita.id, draft.dataVisita, draft.observacoes, draft.pedidoOracao, draft.cestaEntregue === "sim");
       toast.success("Visita concluída e registrada.");
     } catch (error) {
       toast.error(errorMessage(error));
@@ -151,6 +153,16 @@ export default function RegistrosPage() {
                     <>
                       <div className="space-y-1"><Label className="text-xs">Data da visita<Required /></Label><Input type="date" value={draft.dataVisita} onChange={(event) => updateDraft(visita.id, "dataVisita", event.target.value)} required /></div>
                       <div className="space-y-1"><Label className="text-xs">Relato<Required /></Label><Textarea value={draft.observacoes} onChange={(event) => updateDraft(visita.id, "observacoes", event.target.value)} rows={3} placeholder="Como foi a visita…" required /></div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Cesta entregue?<Required /></Label>
+                        <Select value={draft.cestaEntregue} onValueChange={(value) => updateDraft(visita.id, "cestaEntregue", value)}>
+                          <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sim">Sim</SelectItem>
+                            <SelectItem value="nao">Não</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                       <div className="space-y-1"><Label className="text-xs flex items-center gap-1 text-rose-600"><Heart className="h-3 w-3" /> Pedido de oração</Label><Textarea value={draft.pedidoOracao} onChange={(event) => updateDraft(visita.id, "pedidoOracao", event.target.value)} rows={2} className="border-rose-200" /></div>
                       {visita.cestaItens.length > 0 && <div className="flex flex-wrap gap-1">{visita.cestaItens.map((item) => <Badge key={item.alimentoId} variant="secondary">{item.quantidade} {item.unidade} {item.nome}</Badge>)}</div>}
                       <div className="flex gap-2 flex-wrap items-center justify-between">
@@ -250,6 +262,10 @@ export default function RegistrosPage() {
                     </span>
                   )}
                 </div>
+
+                <Badge variant={visita.cestaEntregue ? "secondary" : "outline"}>
+                  {visita.cestaEntregue ? "Cesta entregue" : "Cesta não entregue"}
+                </Badge>
 
                 {visita.observacoes && (
                   <p className="text-sm text-muted-foreground">

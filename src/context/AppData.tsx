@@ -57,6 +57,7 @@ export interface Visita {
   observacoes: string;
   pedidoOracao: string;
   motivoNaoRealizada: string;
+  cestaEntregue: boolean;
 }
 
 export type PessoaInput = Omit<Pessoa, "id">;
@@ -85,8 +86,7 @@ interface AppDataContextValue {
   atualizarVisita: (visita: Visita) => Promise<void>;
   excluirVisita: (id: string) => Promise<void>;
   definirItemCesta: (visitaId: string, alimentoId: string, quantidade: number) => Promise<void>;
-  finalizarVisita: (visitaId: string, dataVisita: string, observacoes: string, pedidoOracao: string) => Promise<void>;
-  marcarVisitaNaoRealizada: (visitaId: string, motivo: string) => Promise<void>;
+finalizarVisita: (visitaId: string, dataVisita: string, observacoes: string, pedidoOracao: string, cestaEntregue: boolean) => Promise<void>;  marcarVisitaNaoRealizada: (visitaId: string, motivo: string) => Promise<void>;
   reabrirVisita: (visitaId: string) => Promise<void>;
 }
 
@@ -203,6 +203,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         observacoes: row.observacoes,
         pedidoOracao: row.pedido_oracao,
         motivoNaoRealizada: row.motivo_nao_realizada ?? "",
+        cestaEntregue: row.cesta_entregue ?? false,
         cestaItens: cestaRows
           .filter((item) => item.visita_id === row.id)
           .map((item) => {
@@ -388,7 +389,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     setVisitas((current) => current.filter((visita) => visita.grupoId !== id));
   }, []);
 
-  const criarVisita = useCallback(async (input: Omit<Visita, "id" | "cestaItens" | "realizada" | "naoRealizada" | "motivoNaoRealizada">) => {
+  const criarVisita = useCallback(async (input: Omit<Visita, "id" | "cestaItens" | "realizada" | "naoRealizada" | "motivoNaoRealizada" | "cestaEntregue">) => {
     const { data, error } = await supabase.from("visitas").insert({
       grupo_id: input.grupoId,
       pessoa_id: input.pessoaId,
@@ -402,6 +403,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       id: data.id, grupoId: data.grupo_id, pessoaId: data.pessoa_id, cestaItens: [], realizada: data.realizada,
       naoRealizada: data.nao_realizada, dataVisita: data.data_visita ?? "", observacoes: data.observacoes,
       pedidoOracao: data.pedido_oracao, motivoNaoRealizada: data.motivo_nao_realizada ?? "",
+      cestaEntregue: data.cesta_entregue ?? false,
     };
     setVisitas((current) => [visita, ...current]);
     return visita;
@@ -417,6 +419,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     observacoes: visita.observacoes,
     pedido_oracao: visita.pedidoOracao,
     motivo_nao_realizada: visita.motivoNaoRealizada,
+    cesta_entregue: visita.cestaEntregue,
   }).eq("id", visita.id);
   if (error) throw error;
   setVisitas((current) => current.map((item) => item.id === visita.id ? visita : item));
@@ -438,12 +441,13 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     await refresh();
   }, [refresh]);
 
-  const finalizarVisita = useCallback(async (visitaId: string, dataVisita: string, observacoes: string, pedidoOracao: string) => {
+  const finalizarVisita = useCallback(async (visitaId: string, dataVisita: string, observacoes: string, pedidoOracao: string, cestaEntregue: boolean) => {
     const { error } = await supabase.rpc("finalizar_visita", {
       p_visita_id: visitaId,
       p_data_visita: dataVisita || null,
       p_observacoes: observacoes,
       p_pedido_oracao: pedidoOracao,
+      p_cesta_entregue: cestaEntregue,
     });
     if (error) throw error;
     await refresh();

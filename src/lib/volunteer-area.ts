@@ -57,6 +57,7 @@ export function parseVolunteerArea(value: unknown): VolunteerAreaData {
       observacoes: visita.observacoes ?? "",
       pedidoOracao: visita.pedidoOracao ?? "",
       motivoNaoRealizada: visita.motivoNaoRealizada ?? "",
+      cestaEntregue: visita.cestaEntregue ?? false,
     })),
   };
 }
