@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import QRCode from 'qrcode';
@@ -65,6 +66,7 @@ function VoluntarioForm() {
   const [telefone, setTelefone]           = useState('');
   const [disponibilidade, setDisponibilidade] = useState('');
   const [casaOracao, setCasaOracao]       = useState('');
+  const [possuiCarro, setPossuiCarro]     = useState(false);
   const [enviado, setEnviado]             = useState(false);
   const [loading, setLoading]             = useState(false);
 
@@ -77,7 +79,7 @@ function VoluntarioForm() {
     setLoading(true);
     const { error } = await supabase
       .from('voluntarios_pendentes')
-      .insert({ nome: nome.trim(), telefone, disponibilidade: disponibilidade.trim(), casa_oracao: casaOracao });
+      .insert({ nome: nome.trim(), telefone, disponibilidade: disponibilidade.trim(), casa_oracao: casaOracao, possui_carro: possuiCarro });
     setLoading(false);
     if (error) { toast.error('Erro ao enviar. Tente novamente.'); return; }
     setEnviado(true);
@@ -88,6 +90,7 @@ function VoluntarioForm() {
     setTelefone('');
     setDisponibilidade('');
     setCasaOracao('');
+    setPossuiCarro(false);
     setEnviado(false);
   };
 
@@ -157,6 +160,10 @@ function VoluntarioForm() {
               ))}
             </SelectContent>
           </Select>
+        </div>
+        <div className="flex items-center gap-2">
+          <Checkbox id="voluntario-possui-carro" checked={possuiCarro} onCheckedChange={(checked) => setPossuiCarro(checked === true)} />
+          <Label htmlFor="voluntario-possui-carro" className="cursor-pointer font-normal">Possuo carro</Label>
         </div>
         <Button className="w-full" onClick={handleEnviar} disabled={loading}>
           {loading ? 'Enviando…' : <><UserPlus className="mr-2 h-4 w-4" />Enviar solicitação</>}

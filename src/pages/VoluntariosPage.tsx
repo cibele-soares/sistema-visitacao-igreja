@@ -19,8 +19,8 @@ import { CASAS_ORACAO } from "@/lib/casas-oracao";
 
 type Solicitacao = Tables<"voluntarios_pendentes">;
 
-type Form = { nome: string; telefone: string; disponibilidade: string; casaOracao: string; podeControlarAlimentos: boolean };
-const emptyForm: Form = { nome: "", telefone: "", disponibilidade: "", casaOracao: "", podeControlarAlimentos: false };
+type Form = { nome: string; telefone: string; disponibilidade: string; casaOracao: string; podeControlarAlimentos: boolean; possuiCarro: boolean };
+const emptyForm: Form = { nome: "", telefone: "", disponibilidade: "", casaOracao: "", podeControlarAlimentos: false, possuiCarro: false };
 
 const DATAS_EVENTO = [
   { valor: "2026-09-26", label: "26/09" },
@@ -206,7 +206,7 @@ export default function VoluntariosPage() {
   }
   setSaving(true);
   try {
-    await atualizarVoluntario(editing.id, { nome: editing.nome, telefone: editing.telefone, disponibilidade: editing.disponibilidade, codigo: editing.codigo, casaOracao: editing.casaOracao, podeControlarAlimentos: editing.podeControlarAlimentos });
+    await atualizarVoluntario(editing.id, { nome: editing.nome, telefone: editing.telefone, disponibilidade: editing.disponibilidade, codigo: editing.codigo, casaOracao: editing.casaOracao, podeControlarAlimentos: editing.podeControlarAlimentos, possuiCarro: editing.possuiCarro });
     setEditing(null);
     toast.success("Voluntário atualizado.");
   } catch (error) { toast.error(errorMessage(error)); } finally { setSaving(false); }
@@ -246,12 +246,16 @@ export default function VoluntariosPage() {
                 <Checkbox id="pode-controlar-alimentos" checked={form.podeControlarAlimentos} onCheckedChange={(checked) => setForm({ ...form, podeControlarAlimentos: checked === true })} />
                 <Label htmlFor="pode-controlar-alimentos" className="cursor-pointer font-normal">Pode cadastrar alimentos pela área do voluntário</Label>
               </div>
+              <div className="sm:col-span-4 flex items-center gap-2">
+                <Checkbox id="possui-carro" checked={form.possuiCarro} onCheckedChange={(checked) => setForm({ ...form, possuiCarro: checked === true })} />
+                <Label htmlFor="possui-carro" className="cursor-pointer font-normal">Possui carro</Label>
+              </div>
               <div className="sm:col-span-4"><Button disabled={saving} onClick={() => void add()}><Plus className="mr-2 h-4 w-4" />Cadastrar</Button></div>
             </CardContent>
           </Card>
-          <div className="grid gap-3">{voluntarios.map((voluntario) => <Card key={voluntario.id}><CardContent className="p-4"><div className="flex items-start justify-between gap-3"><div><div className="flex items-center gap-2"><p className="font-semibold">{voluntario.nome}</p>{voluntario.ehLider && <Badge className="gap-1"><Crown className="h-3 w-3" />Líder</Badge>}{voluntario.podeControlarAlimentos && <Badge variant="secondary">Alimentos</Badge>}</div><p className="text-sm text-muted-foreground">{voluntario.telefone || "Sem telefone"} · {voluntario.disponibilidade || "Sem disponibilidade informada"}</p><p className="text-sm text-muted-foreground">{voluntario.casaOracao}</p><button className="mt-2 font-mono text-sm bg-muted px-2 py-1 rounded inline-flex items-center gap-2" onClick={() => void copyCode(voluntario.codigo)}>{voluntario.codigo}<Copy className="h-3 w-3" /></button></div><div className="flex"><Button variant="ghost" size="icon" onClick={() => setEditing(voluntario)}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => void remove(voluntario.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></div></div></CardContent></Card>)}</div>
+          <div className="grid gap-3">{voluntarios.map((voluntario) => <Card key={voluntario.id}><CardContent className="p-4"><div className="flex items-start justify-between gap-3"><div><div className="flex items-center gap-2"><p className="font-semibold">{voluntario.nome}</p>{voluntario.ehLider && <Badge className="gap-1"><Crown className="h-3 w-3" />Líder</Badge>}{voluntario.podeControlarAlimentos && <Badge variant="secondary">Alimentos</Badge>}{voluntario.possuiCarro && <Badge variant="secondary">Carro</Badge>}</div><p className="text-sm text-muted-foreground">{voluntario.telefone || "Sem telefone"} · {voluntario.disponibilidade || "Sem disponibilidade informada"}</p><p className="text-sm text-muted-foreground">{voluntario.casaOracao}</p><button className="mt-2 font-mono text-sm bg-muted px-2 py-1 rounded inline-flex items-center gap-2" onClick={() => void copyCode(voluntario.codigo)}>{voluntario.codigo}<Copy className="h-3 w-3" /></button></div><div className="flex"><Button variant="ghost" size="icon" onClick={() => setEditing(voluntario)}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => void remove(voluntario.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></div></div></CardContent></Card>)}</div>
         </TabsContent>
-        <TabsContent value="solicitacoes" className="mt-4">{loadingSol ? <p className="text-sm text-muted-foreground">Carregando…</p> : solicitacoes.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma solicitação.</p> : <div className="grid gap-3">{solicitacoes.map((item) => <Card key={item.id}><CardContent className="py-4"><p className="font-semibold">{item.nome}</p><p className="text-sm text-muted-foreground">{item.telefone || "Sem telefone"}</p><p className="text-sm">{item.disponibilidade}</p><p className="text-sm text-muted-foreground">{item.casa_oracao}</p><div className="flex gap-2 mt-3"><Button size="sm" onClick={() => void approve(item)}><Check className="mr-1 h-4 w-4" />Aprovar</Button><Button size="sm" variant="outline" onClick={() => void reject(item.id)}><X className="mr-1 h-4 w-4" />Recusar</Button></div></CardContent></Card>)}</div>}</TabsContent>
+        <TabsContent value="solicitacoes" className="mt-4">{loadingSol ? <p className="text-sm text-muted-foreground">Carregando…</p> : solicitacoes.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma solicitação.</p> : <div className="grid gap-3">{solicitacoes.map((item) => <Card key={item.id}><CardContent className="py-4"><p className="font-semibold">{item.nome}</p><p className="text-sm text-muted-foreground">{item.telefone || "Sem telefone"}</p><p className="text-sm">{item.disponibilidade}</p><p className="text-sm text-muted-foreground">{item.casa_oracao}</p><p className="text-sm text-muted-foreground">{item.possui_carro ? "Possui carro" : "Não possui carro"}</p><div className="flex gap-2 mt-3"><Button size="sm" onClick={() => void approve(item)}><Check className="mr-1 h-4 w-4" />Aprovar</Button><Button size="sm" variant="outline" onClick={() => void reject(item.id)}><X className="mr-1 h-4 w-4" />Recusar</Button></div></CardContent></Card>)}</div>}</TabsContent>
         <TabsContent value="presenca"><PresencaTab /></TabsContent>
       </Tabs>
 
@@ -276,6 +280,10 @@ export default function VoluntariosPage() {
             <div className="flex items-center gap-2">
               <Checkbox id="editing-pode-controlar-alimentos" checked={editing.podeControlarAlimentos} onCheckedChange={(checked) => setEditing({ ...editing, podeControlarAlimentos: checked === true })} />
               <Label htmlFor="editing-pode-controlar-alimentos" className="cursor-pointer font-normal">Pode cadastrar alimentos pela área do voluntário</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox id="editing-possui-carro" checked={editing.possuiCarro} onCheckedChange={(checked) => setEditing({ ...editing, possuiCarro: checked === true })} />
+              <Label htmlFor="editing-possui-carro" className="cursor-pointer font-normal">Possui carro</Label>
             </div>
           </div>
 )}

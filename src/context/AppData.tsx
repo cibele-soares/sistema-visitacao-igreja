@@ -19,6 +19,7 @@ export interface Voluntario {
   codigo: string;
   casaOracao: string;
   podeControlarAlimentos: boolean;
+  possuiCarro: boolean;
 }
 
 export interface Alimento {
@@ -162,6 +163,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         codigo: row.codigo,
         casaOracao: row.casa_oracao,
         podeControlarAlimentos: row.pode_controlar_alimentos,
+        possuiCarro: row.possui_carro,
       }));
 
       const voluntarioNomeById = new Map(nextVoluntarios.map((voluntario) => [voluntario.id, voluntario.nome]));
@@ -306,6 +308,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       codigo: input.codigo.toUpperCase(),
       casa_oracao: input.casaOracao.trim(),
       pode_controlar_alimentos: input.podeControlarAlimentos,
+      possui_carro: input.possuiCarro,
       eh_lider: false,
     }).select().single();
     if (error) throw error;
@@ -313,6 +316,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       id: data.id, nome: data.nome, telefone: data.telefone, disponibilidade: data.disponibilidade,
       codigo: data.codigo, ehLider: data.eh_lider, casaOracao: data.casa_oracao,
       podeControlarAlimentos: data.pode_controlar_alimentos,
+      possuiCarro: data.possui_carro,
     };
     setVoluntarios((current) => [...current, voluntario].sort((a, b) => a.nome.localeCompare(b.nome)));
     return voluntario;
@@ -326,6 +330,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       codigo: input.codigo.toUpperCase(),
       casa_oracao: input.casaOracao.trim(),
       pode_controlar_alimentos: input.podeControlarAlimentos,
+      possui_carro: input.possuiCarro,
     }).eq("id", id);
     if (error) throw error;
     setVoluntarios((current) => current.map((voluntario) => voluntario.id === id ? { ...voluntario, ...input, codigo: input.codigo.toUpperCase() } : voluntario));
