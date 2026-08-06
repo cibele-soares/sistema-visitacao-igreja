@@ -8,6 +8,20 @@ export interface VolunteerIdentity {
   ehLider: boolean;
 }
 
+export interface VolunteerAlimento {
+  id: string;
+  nome: string;
+  quantidade: number;
+  unidade: string;
+  casaOracao: string;
+  dataEntrada: string;
+}
+
+export interface VolunteerAlimentosInfo {
+  podeControlarAlimentos: boolean;
+  meusAlimentos: VolunteerAlimento[];
+}
+
 export interface VolunteerName {
   id: string;
   nome: string;
@@ -44,5 +58,16 @@ export function parseVolunteerArea(value: unknown): VolunteerAreaData {
       pedidoOracao: visita.pedidoOracao ?? "",
       motivoNaoRealizada: visita.motivoNaoRealizada ?? "",
     })),
+  };
+}
+
+export function parseVolunteerAlimentosInfo(value: unknown): VolunteerAlimentosInfo {
+  if (!isRecord(value) || typeof value.podeControlarAlimentos !== "boolean" || !Array.isArray(value.meusAlimentos)) {
+    throw new Error("Resposta inválida do servidor.");
+  }
+
+  return {
+    podeControlarAlimentos: value.podeControlarAlimentos,
+    meusAlimentos: value.meusAlimentos as unknown as VolunteerAlimento[],
   };
 }

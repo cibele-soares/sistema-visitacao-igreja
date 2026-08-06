@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue,} from "@/components/ui/select";
+import { CASAS_ORACAO } from "@/lib/casas-oracao";
 
 export default function AlimentosPage() {
   const { alimentos, criarAlimento, excluirAlimento } = useAppData();
@@ -17,24 +18,6 @@ export default function AlimentosPage() {
   const [unidade, setUnidade] = useState("kg");
   const [saving, setSaving] = useState(false);
   const [casaOracao, setCasaOracao] = useState("");
-  const CASAS_ORACAO: { cidade: string; casas: string[] }[] = [
-  {
-    cidade: "Amparo",
-    casas: [
-      "Amparo - Centro",
-      "Distrito Arcadas",
-      "Fazenda Campineiro",
-      "Jardim Brasil",
-      "Jardim das Aves",
-      "Jardim São Dimas",
-      "Vale Verde",
-    ],
-  },
-  {
-    cidade: "Monte Alegre do Sul",
-    casas: ["Jardim Vitória", "Mostardas", "Ponte Alta", "Três Pontes"],
-  },
-];
 
   const handleAdd = async () => {
     const value = Number(quantidade);

@@ -1,25 +1,31 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, Church, Clock, Crown, Heart, LogOut, Navigation, Phone, Users, XCircle } from "lucide-react";
+import { CheckCircle2, Church, Clock, Crown, Heart, LogOut, Navigation, Package, Phone, Plus, Users, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { errorMessage } from "@/lib/error";
-import { parseVolunteerArea, type VolunteerAreaData } from "@/lib/volunteer-area";
+import { parseVolunteerArea, parseVolunteerAlimentosInfo, type VolunteerAlimentosInfo, type VolunteerAreaData } from "@/lib/volunteer-area";
 import { VOLUNTEER_EXPIRES_KEY, VOLUNTEER_TOKEN_KEY } from "@/lib/volunteer-session";
+import { CASAS_ORACAO } from "@/lib/casas-oracao";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
 export default function VoluntarioAreaPage() {
   const navigate = useNavigate();
   const [area, setArea] = useState<VolunteerAreaData | null>(null);
+  const [alimentosInfo, setAlimentosInfo] = useState<VolunteerAlimentosInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [relatos, setRelatos] = useState<Record<string, string>>({});
   const [oracoes, setOracoes] = useState<Record<string, string>>({});
   const [naoRealizadaModo, setNaoRealizadaModo] = useState<Record<string, boolean>>({});
   const [motivos, setMotivos] = useState<Record<string, string>>({});
+  const [alimentoForm, setAlimentoForm] = useState({ nome: "", quantidade: "", unidade: "kg", casaOracao: "" });
+  const [savingAlimento, setSavingAlimento] = useState(false);
 
   const clearSession = () => {
     sessionStorage.removeItem(VOLUNTEER_TOKEN_KEY);
@@ -46,8 +52,17 @@ export default function VoluntarioAreaPage() {
         clearSession();
         toast.error(errorMessage(error, "Sua sessão expirou."));
         navigate("/acesso", { replace: true });
+        return;
       } finally {
         if (active) setLoading(false);
+      }
+
+      try {
+        const { data: alimData, error: alimError } = await supabase.rpc("voluntario_alimentos_info", { p_token: token });
+        if (alimError) throw alimError;
+        if (active) setAlimentosInfo(parseVolunteerAlimentosInfo(alimData));
+      } catch (error) {
+        console.error(error);
       }
     };
 
@@ -125,6 +140,38 @@ export default function VoluntarioAreaPage() {
     }
   };
 
+  const handleAddAlimento = async () => {
+    const token = sessionStorage.getItem(VOLUNTEER_TOKEN_KEY);
+    if (!token) {
+      navigate("/acesso", { replace: true });
+      return;
+    }
+    const value = Number(alimentoForm.quantidade);
+    if (!alimentoForm.nome.trim() || !Number.isFinite(value) || value < 0 || !alimentoForm.unidade.trim() || !alimentoForm.casaOracao.trim()) {
+      toast.error("Informe nome, quantidade válida, unidade e casa de oração.");
+      return;
+    }
+
+    setSavingAlimento(true);
+    try {
+      const { data, error } = await supabase.rpc("voluntario_criar_alimento", {
+        p_token: token,
+        p_nome: alimentoForm.nome.trim(),
+        p_quantidade: value,
+        p_unidade: alimentoForm.unidade.trim(),
+        p_casa_oracao: alimentoForm.casaOracao.trim(),
+      });
+      if (error) throw error;
+      setAlimentosInfo(parseVolunteerAlimentosInfo(data));
+      setAlimentoForm({ nome: "", quantidade: "", unidade: "kg", casaOracao: "" });
+      toast.success("Alimento cadastrado.");
+    } catch (error) {
+      toast.error(errorMessage(error));
+    } finally {
+      setSavingAlimento(false);
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
   }
@@ -165,6 +212,62 @@ export default function VoluntarioAreaPage() {
           ))}
         </section>
 
+        {alimentosInfo?.podeControlarAlimentos && (
+          <section className="space-y-3">
+            <h2 className="text-base font-serif font-semibold flex items-center gap-2"><Package className="h-4 w-4 text-primary" />Controle de Alimentos</h2>
+            <Card>
+              <CardContent className="p-4 space-y-3">
+                <div className="space-y-1">
+                  <label className="text-xs text-foreground">Alimento<span className="text-rose-600"> *</span></label>
+                  <Input value={alimentoForm.nome} onChange={(event) => setAlimentoForm((current) => ({ ...current, nome: event.target.value }))} placeholder="Ex: Arroz" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-xs text-foreground">Quantidade<span className="text-rose-600"> *</span></label>
+                    <Input min={0} step="any" type="number" value={alimentoForm.quantidade} onChange={(event) => setAlimentoForm((current) => ({ ...current, quantidade: event.target.value }))} placeholder="0" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-foreground">Unidade<span className="text-rose-600"> *</span></label>
+                    <Input value={alimentoForm.unidade} onChange={(event) => setAlimentoForm((current) => ({ ...current, unidade: event.target.value }))} placeholder="kg, un, pct" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-foreground">Casa de Oração<span className="text-rose-600"> *</span></label>
+                  <Select value={alimentoForm.casaOracao} onValueChange={(value) => setAlimentoForm((current) => ({ ...current, casaOracao: value }))}>
+                    <SelectTrigger><SelectValue placeholder="Selecione a casa de oração" /></SelectTrigger>
+                    <SelectContent>
+                      {CASAS_ORACAO.map((grupo) => (
+                        <SelectGroup key={grupo.cidade}>
+                          <SelectLabel>{grupo.cidade}</SelectLabel>
+                          {grupo.casas.map((casa) => <SelectItem key={casa} value={casa}>{casa}</SelectItem>)}
+                        </SelectGroup>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button className="w-full" disabled={savingAlimento} onClick={() => void handleAddAlimento()}>
+                  <Plus className="mr-2 h-4 w-4" />{savingAlimento ? "Salvando…" : "Adicionar alimento"}
+                </Button>
+              </CardContent>
+            </Card>
+            {alimentosInfo.meusAlimentos.length > 0 && (
+              <div className="space-y-2">
+                {alimentosInfo.meusAlimentos.map((item) => (
+                  <Card key={item.id}>
+                    <CardContent className="py-3 px-4 flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-medium">{item.nome}</p>
+                        <p className="text-xs text-muted-foreground">{item.casaOracao}</p>
+                      </div>
+                      <Badge variant="secondary">{item.quantidade} {item.unidade}</Badge>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
         <section className="space-y-3">
           <h2 className="text-base font-serif font-semibold flex items-center gap-2"><Clock className="h-4 w-4 text-primary" />Visitas pendentes</h2>
           {pendentes.length === 0 ? <Card><CardContent className="p-6 text-center"><CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-success" /><p className="text-sm text-muted-foreground">Todas as visitas estão concluídas.</p></CardContent></Card> : pendentes.map((visita) => {
@@ -193,7 +296,7 @@ export default function VoluntarioAreaPage() {
                       <Button className="w-full" disabled={savingId === visita.id || !isRelatoCompleto(visita.id)} onClick={() => void handleComplete(visita.id)}>
                         <CheckCircle2 className="mr-2 h-4 w-4" />{savingId === visita.id ? "Registrando…" : "Marcar como realizada"}
                       </Button>
-                      <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => setNaoRealizadaModo((current) => ({ ...current, [visita.id]: true }))}>
+                      <Button variant="outline" className="w-full text-muted-foreground bg-muted/50 hover:bg-muted" onClick={() => setNaoRealizadaModo((current) => ({ ...current, [visita.id]: true }))}>
                         <XCircle className="mr-2 h-4 w-4" />A visita não foi realizada
                       </Button>
                     </>

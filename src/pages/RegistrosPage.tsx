@@ -158,7 +158,7 @@ export default function RegistrosPage() {
                           <Button variant="outline" size="sm" disabled={savingId === visita.id} onClick={() => void saveDraft(visita)}><Save className="mr-1.5 h-4 w-4" />Salvar rascunho</Button>
                           <Button size="sm" disabled={savingId === visita.id || !isDraftCompleto(draft)} onClick={() => void complete(visita)}><Check className="mr-1.5 h-4 w-4" />Concluir visita</Button>
                         </div>
-                        <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setNaoRealizadaModo((current) => ({ ...current, [visita.id]: true }))}>
+                        <Button variant="outline" size="sm" className="text-muted-foreground bg-muted/50 hover:bg-muted" onClick={() => setNaoRealizadaModo((current) => ({ ...current, [visita.id]: true }))}>
                           <XCircle className="mr-1.5 h-4 w-4" />A visita não foi realizada
                         </Button>
                       </div>

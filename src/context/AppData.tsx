@@ -18,6 +18,7 @@ export interface Voluntario {
   ehLider: boolean;
   codigo: string;
   casaOracao: string;
+  podeControlarAlimentos: boolean;
 }
 
 export interface Alimento {
@@ -160,7 +161,10 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         ehLider: row.eh_lider,
         codigo: row.codigo,
         casaOracao: row.casa_oracao,
+        podeControlarAlimentos: row.pode_controlar_alimentos,
       }));
+
+      const voluntarioNomeById = new Map(nextVoluntarios.map((voluntario) => [voluntario.id, voluntario.nome]));
 
       const nextAlimentos: Alimento[] = (alimentosRes.data ?? []).map((row) => ({
         id: row.id,
@@ -169,7 +173,10 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         unidade: row.unidade,
         dataEntrada: row.data_entrada,
         casaOracao: row.casa_oracao,
-        inseridoPorNome: (row.inserido_por && nomeById.get(row.inserido_por)) || "—",
+        inseridoPorNome:
+          (row.inserido_por && nomeById.get(row.inserido_por)) ||
+          (row.inserido_por_voluntario && voluntarioNomeById.get(row.inserido_por_voluntario)) ||
+          "—",
       }));
 
       const memberships = grupoVolsRes.data ?? [];
@@ -298,12 +305,14 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       disponibilidade: input.disponibilidade.trim(),
       codigo: input.codigo.toUpperCase(),
       casa_oracao: input.casaOracao.trim(),
+      pode_controlar_alimentos: input.podeControlarAlimentos,
       eh_lider: false,
     }).select().single();
     if (error) throw error;
     const voluntario: Voluntario = {
       id: data.id, nome: data.nome, telefone: data.telefone, disponibilidade: data.disponibilidade,
       codigo: data.codigo, ehLider: data.eh_lider, casaOracao: data.casa_oracao,
+      podeControlarAlimentos: data.pode_controlar_alimentos,
     };
     setVoluntarios((current) => [...current, voluntario].sort((a, b) => a.nome.localeCompare(b.nome)));
     return voluntario;
@@ -316,6 +325,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       disponibilidade: input.disponibilidade.trim(),
       codigo: input.codigo.toUpperCase(),
       casa_oracao: input.casaOracao.trim(),
+      pode_controlar_alimentos: input.podeControlarAlimentos,
     }).eq("id", id);
     if (error) throw error;
     setVoluntarios((current) => current.map((voluntario) => voluntario.id === id ? { ...voluntario, ...input, codigo: input.codigo.toUpperCase() } : voluntario));

@@ -30,14 +30,14 @@ export type Database = {
         { id?: string; nome?: string; endereco?: string; telefone?: string; observacoes?: string; created_at?: string }
       >;
       voluntarios: Table<
-        { id: string; nome: string; telefone: string; disponibilidade: string; eh_lider: boolean; codigo: string; casa_oracao: string; created_at: string },
-        { id?: string; nome: string; telefone?: string; disponibilidade?: string; eh_lider?: boolean; codigo: string; casa_oracao: string; created_at?: string },
-        { id?: string; nome?: string; telefone?: string; disponibilidade?: string; eh_lider?: boolean; codigo?: string; casa_oracao?: string; created_at?: string }
+        { id: string; nome: string; telefone: string; disponibilidade: string; eh_lider: boolean; codigo: string; casa_oracao: string; pode_controlar_alimentos: boolean; created_at: string },
+        { id?: string; nome: string; telefone?: string; disponibilidade?: string; eh_lider?: boolean; codigo: string; casa_oracao: string; pode_controlar_alimentos?: boolean; created_at?: string },
+        { id?: string; nome?: string; telefone?: string; disponibilidade?: string; eh_lider?: boolean; codigo?: string; casa_oracao?: string; pode_controlar_alimentos?: boolean; created_at?: string }
       >;
       alimentos: Table<
-        { id: string; nome: string; quantidade: number; unidade: string; data_entrada: string; casa_oracao: string; inserido_por: string | null; created_at: string },
-        { id?: string; nome: string; quantidade?: number; unidade?: string; data_entrada?: string; casa_oracao?: string; inserido_por?: string | null; created_at?: string },
-        { id?: string; nome?: string; quantidade?: number; unidade?: string; data_entrada?: string; casa_oracao?: string; inserido_por?: string | null; created_at?: string }
+        { id: string; nome: string; quantidade: number; unidade: string; data_entrada: string; casa_oracao: string; inserido_por: string | null; inserido_por_voluntario: string | null; created_at: string },
+        { id?: string; nome: string; quantidade?: number; unidade?: string; data_entrada?: string; casa_oracao?: string; inserido_por?: string | null; inserido_por_voluntario?: string | null; created_at?: string },
+        { id?: string; nome?: string; quantidade?: number; unidade?: string; data_entrada?: string; casa_oracao?: string; inserido_por?: string | null; inserido_por_voluntario?: string | null; created_at?: string }
       >;
       grupos: Table<
         { id: string; nome: string; lider_id: string | null; created_at: string },
@@ -100,7 +100,7 @@ export type Database = {
         { id: string; nome: string; telefone?: string | null; perfil?: "admin" | "voluntario_responsavel"; ativo?: boolean; criado_em?: string },
         { nome?: string; telefone?: string | null }
       >;
-      registros_visitas: Table <
+      registros_visitas: Table< 
         {
           id: string;
           visita_id: string;
@@ -193,6 +193,11 @@ export type Database = {
         Returns: Json;
       };
       voluntario_logout: { Args: { p_token: string }; Returns: undefined };
+      voluntario_alimentos_info: { Args: { p_token: string }; Returns: Json };
+      voluntario_criar_alimento: {
+        Args: { p_token: string; p_nome: string; p_quantidade: number; p_unidade: string; p_casa_oracao: string };
+        Returns: Json;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
@@ -205,4 +210,3 @@ export type TablesInsert<T extends keyof Database["public"]["Tables"]> =
   Database["public"]["Tables"][T]["Insert"];
 export type TablesUpdate<T extends keyof Database["public"]["Tables"]> =
   Database["public"]["Tables"][T]["Update"];
-  
