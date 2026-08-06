@@ -52,6 +52,9 @@ export default function PessoasPage() {
 
   useEffect(() => { void loadPending(); }, []);
 
+  const pendentes = solicitacoes.filter((item) => item.status !== "recusado");
+  const recusados = solicitacoes.filter((item) => item.status === "recusado");
+
   const setField = (field: keyof PessoaForm, value: string) => setForm((current) => ({ ...current, [field]: value }));
 
   const handleAdd = async () => {
@@ -83,13 +86,33 @@ export default function PessoasPage() {
   };
 
   const reject = async (id: string) => {
+    const { error } = await supabase.from("pessoas_pendentes").update({ status: "recusado" }).eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setSolicitacoes((current) => current.map((item) => item.id === id ? { ...item, status: "recusado" } : item));
+    toast.info("Solicitação em análise. Ela fica em \"Em análise\" caso precise restaurar.");
+  };
+
+  const restaurar = async (id: string) => {
+    const { error } = await supabase.from("pessoas_pendentes").update({ status: "pendente" }).eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setSolicitacoes((current) => current.map((item) => item.id === id ? { ...item, status: "pendente" } : item));
+    toast.success("Solicitação restaurada para Pendentes.");
+  };
+
+  const excluirDefinitivo = async (id: string) => {
     const { error } = await supabase.from("pessoas_pendentes").delete().eq("id", id);
     if (error) {
       toast.error(error.message);
       return;
     }
     setSolicitacoes((current) => current.filter((item) => item.id !== id));
-    toast.info("Solicitação removida.");
+    toast.info("Solicitação excluída definitivamente.");
   };
 
   const remove = async (id: string) => {
@@ -122,7 +145,7 @@ export default function PessoasPage() {
     <div className="space-y-6 pb-12">
       <div><h1 className="text-2xl font-serif font-bold">Irmandade que será visitada</h1><p className="text-muted-foreground text-sm mt-1">Gerencie cadastros e solicitações recebidas pelo site.</p></div>
       <Tabs defaultValue="lista">
-        <TabsList><TabsTrigger value="lista">Lista geral</TabsTrigger><TabsTrigger value="solicitacoes">Solicitações {solicitacoes.length > 0 && <Badge className="ml-2">{solicitacoes.length}</Badge>}</TabsTrigger></TabsList>
+        <TabsList><TabsTrigger value="lista">Lista geral</TabsTrigger><TabsTrigger value="solicitacoes">Solicitações {pendentes.length > 0 && <Badge className="ml-2">{pendentes.length}</Badge>}</TabsTrigger><TabsTrigger value="recusados">Em análise {recusados.length > 0 && <Badge variant="secondary" className="ml-2">{recusados.length}</Badge>}</TabsTrigger></TabsList>
         <TabsContent value="lista" className="space-y-4 mt-4">
           <Card>
             <CardHeader><CardTitle className="font-serif text-lg">Novo cadastro</CardTitle></CardHeader>
@@ -152,7 +175,10 @@ export default function PessoasPage() {
           </div>
         </TabsContent>
         <TabsContent value="solicitacoes" className="mt-4">
-          {loadingSol ? <p className="text-sm text-muted-foreground">Carregando…</p> : solicitacoes.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma solicitação pendente.</p> : <div className="grid gap-3">{solicitacoes.map((item) => <Card key={item.id}><CardContent className="py-4 space-y-2"><div><p className="font-semibold">{item.nome}</p><p className="text-sm text-muted-foreground">{item.telefone} · {item.endereco}</p><p className="text-sm mt-2">{item.observacoes}</p></div><div className="flex gap-2"><Button size="sm" onClick={() => void approve(item.id, item.nome)}><Check className="mr-1 h-4 w-4" />Aprovar</Button><Button size="sm" variant="outline" onClick={() => void reject(item.id)}><X className="mr-1 h-4 w-4" />Recusar</Button></div></CardContent></Card>)}</div>}
+          {loadingSol ? <p className="text-sm text-muted-foreground">Carregando…</p> : pendentes.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma solicitação pendente.</p> : <div className="grid gap-3">{pendentes.map((item) => <Card key={item.id}><CardContent className="py-4 space-y-2"><div><p className="font-semibold">{item.nome}</p><p className="text-sm text-muted-foreground">{item.telefone} · {item.endereco}</p><p className="text-sm mt-2">{item.observacoes}</p></div><div className="flex gap-2"><Button size="sm" onClick={() => void approve(item.id, item.nome)}><Check className="mr-1 h-4 w-4" />Aprovar</Button><Button size="sm" variant="outline" onClick={() => void reject(item.id)}><X className="mr-1 h-4 w-4" />Recusar</Button></div></CardContent></Card>)}</div>}
+        </TabsContent>
+        <TabsContent value="recusados" className="mt-4">
+          {loadingSol ? <p className="text-sm text-muted-foreground">Carregando…</p> : recusados.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma solicitação em análise.</p> : <div className="grid gap-3">{recusados.map((item) => <Card key={item.id}><CardContent className="py-4 space-y-2"><div><p className="font-semibold">{item.nome}</p><p className="text-sm text-muted-foreground">{item.telefone} · {item.endereco}</p><p className="text-sm mt-2">{item.observacoes}</p></div><div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => void restaurar(item.id)}>Restaurar</Button><Button size="sm" variant="ghost" onClick={() => void excluirDefinitivo(item.id)}><Trash2 className="mr-1 h-4 w-4 text-destructive" />Excluir definitivamente</Button></div></CardContent></Card>)}</div>}
         </TabsContent>
       </Tabs>
 

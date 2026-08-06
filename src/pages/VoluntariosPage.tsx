@@ -166,6 +166,9 @@ export default function VoluntariosPage() {
   };
   useEffect(() => { void loadPending(); }, []);
 
+  const pendentes = solicitacoes.filter((item) => item.status !== "recusado");
+  const recusados = solicitacoes.filter((item) => item.status === "recusado");
+
   const add = async () => {
   if (!form.nome.trim() || !telefoneValido(form.telefone) || !form.disponibilidade.trim() || !form.casaOracao.trim()) {
     toast.error("Preencha nome, telefone válido, disponibilidade e casa de oração.");
@@ -189,10 +192,24 @@ export default function VoluntariosPage() {
   };
 
   const reject = async (id: string) => {
+    const { error } = await supabase.from("voluntarios_pendentes").update({ status: "recusado" }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    setSolicitacoes((current) => current.map((item) => item.id === id ? { ...item, status: "recusado" } : item));
+    toast.info("Solicitação em análise. Ela fica em \"Em análise\" caso precise restaurar.");
+  };
+
+  const restaurar = async (id: string) => {
+    const { error } = await supabase.from("voluntarios_pendentes").update({ status: "pendente" }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    setSolicitacoes((current) => current.map((item) => item.id === id ? { ...item, status: "pendente" } : item));
+    toast.success("Solicitação restaurada para Pendentes.");
+  };
+
+  const excluirDefinitivo = async (id: string) => {
     const { error } = await supabase.from("voluntarios_pendentes").delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
     setSolicitacoes((current) => current.filter((item) => item.id !== id));
-    toast.info("Solicitação removida.");
+    toast.info("Solicitação excluída definitivamente.");
   };
 
   const remove = async (id: string) => {
@@ -223,7 +240,8 @@ export default function VoluntariosPage() {
       <Tabs defaultValue="lista">
         <TabsList>
           <TabsTrigger value="lista">Lista geral</TabsTrigger>
-          <TabsTrigger value="solicitacoes">Solicitações {solicitacoes.length > 0 && <Badge className="ml-2">{solicitacoes.length}</Badge>}</TabsTrigger>
+          <TabsTrigger value="solicitacoes">Solicitações {pendentes.length > 0 && <Badge className="ml-2">{pendentes.length}</Badge>}</TabsTrigger>
+          <TabsTrigger value="recusados">Em análise {recusados.length > 0 && <Badge variant="secondary" className="ml-2">{recusados.length}</Badge>}</TabsTrigger>
           <TabsTrigger value="presenca">Presença</TabsTrigger>
         </TabsList>
         <TabsContent value="lista" className="space-y-4 mt-4">
@@ -255,7 +273,8 @@ export default function VoluntariosPage() {
           </Card>
           <div className="grid gap-3">{voluntarios.map((voluntario) => <Card key={voluntario.id}><CardContent className="p-4"><div className="flex items-start justify-between gap-3"><div><div className="flex items-center gap-2"><p className="font-semibold">{voluntario.nome}</p>{voluntario.ehLider && <Badge className="gap-1"><Crown className="h-3 w-3" />Líder</Badge>}{voluntario.podeControlarAlimentos && <Badge variant="secondary">Alimentos</Badge>}{voluntario.possuiCarro && <Badge variant="secondary">Carro</Badge>}</div><p className="text-sm text-muted-foreground">{voluntario.telefone || "Sem telefone"} · {voluntario.disponibilidade || "Sem disponibilidade informada"}</p><p className="text-sm text-muted-foreground">{voluntario.casaOracao}</p><button className="mt-2 font-mono text-sm bg-muted px-2 py-1 rounded inline-flex items-center gap-2" onClick={() => void copyCode(voluntario.codigo)}>{voluntario.codigo}<Copy className="h-3 w-3" /></button></div><div className="flex"><Button variant="ghost" size="icon" onClick={() => setEditing(voluntario)}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => void remove(voluntario.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></div></div></CardContent></Card>)}</div>
         </TabsContent>
-        <TabsContent value="solicitacoes" className="mt-4">{loadingSol ? <p className="text-sm text-muted-foreground">Carregando…</p> : solicitacoes.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma solicitação.</p> : <div className="grid gap-3">{solicitacoes.map((item) => <Card key={item.id}><CardContent className="py-4"><p className="font-semibold">{item.nome}</p><p className="text-sm text-muted-foreground">{item.telefone || "Sem telefone"}</p><p className="text-sm">{item.disponibilidade}</p><p className="text-sm text-muted-foreground">{item.casa_oracao}</p><p className="text-sm text-muted-foreground">{item.possui_carro ? "Possui carro" : "Não possui carro"}</p><div className="flex gap-2 mt-3"><Button size="sm" onClick={() => void approve(item)}><Check className="mr-1 h-4 w-4" />Aprovar</Button><Button size="sm" variant="outline" onClick={() => void reject(item.id)}><X className="mr-1 h-4 w-4" />Recusar</Button></div></CardContent></Card>)}</div>}</TabsContent>
+        <TabsContent value="solicitacoes" className="mt-4">{loadingSol ? <p className="text-sm text-muted-foreground">Carregando…</p> : pendentes.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma solicitação pendente.</p> : <div className="grid gap-3">{pendentes.map((item) => <Card key={item.id}><CardContent className="py-4"><p className="font-semibold">{item.nome}</p><p className="text-sm text-muted-foreground">{item.telefone || "Sem telefone"}</p><p className="text-sm">{item.disponibilidade}</p><p className="text-sm text-muted-foreground">{item.casa_oracao}</p><p className="text-sm text-muted-foreground">{item.possui_carro ? "Possui carro" : "Não possui carro"}</p><div className="flex gap-2 mt-3"><Button size="sm" onClick={() => void approve(item)}><Check className="mr-1 h-4 w-4" />Aprovar</Button><Button size="sm" variant="outline" onClick={() => void reject(item.id)}><X className="mr-1 h-4 w-4" />Recusar</Button></div></CardContent></Card>)}</div>}</TabsContent>
+        <TabsContent value="recusados" className="mt-4">{loadingSol ? <p className="text-sm text-muted-foreground">Carregando…</p> : recusados.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma solicitação em análise.</p> : <div className="grid gap-3">{recusados.map((item) => <Card key={item.id}><CardContent className="py-4"><p className="font-semibold">{item.nome}</p><p className="text-sm text-muted-foreground">{item.telefone || "Sem telefone"}</p><p className="text-sm">{item.disponibilidade}</p><p className="text-sm text-muted-foreground">{item.casa_oracao}</p><div className="flex gap-2 mt-3"><Button size="sm" variant="outline" onClick={() => void restaurar(item.id)}>Restaurar</Button><Button size="sm" variant="ghost" onClick={() => void excluirDefinitivo(item.id)}><Trash2 className="mr-1 h-4 w-4 text-destructive" />Excluir definitivamente</Button></div></CardContent></Card>)}</div>}</TabsContent>
         <TabsContent value="presenca"><PresencaTab /></TabsContent>
       </Tabs>
 

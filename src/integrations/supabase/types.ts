@@ -128,14 +128,14 @@ export type Database = {
         }
       >;
       pessoas_pendentes: Table<
-        { id: string; nome: string; telefone: string; endereco: string; observacoes: string; created_at: string },
-        { id?: string; nome: string; telefone?: string; endereco: string; observacoes?: string; created_at?: string },
-        { nome?: string; telefone?: string; endereco?: string; observacoes?: string }
+        { id: string; nome: string; telefone: string; endereco: string; observacoes: string; status: string; created_at: string },
+        { id?: string; nome: string; telefone?: string; endereco: string; observacoes?: string; status?: string; created_at?: string },
+        { nome?: string; telefone?: string; endereco?: string; observacoes?: string; status?: string }
       >;
       voluntarios_pendentes: Table<
-        { id: string; nome: string; telefone: string; disponibilidade: string; casa_oracao: string; possui_carro: boolean; created_at: string },
-        { id?: string; nome: string; telefone?: string; disponibilidade?: string; casa_oracao: string; possui_carro?: boolean; created_at?: string },
-        { nome?: string; telefone?: string; disponibilidade?: string; casa_oracao?: string; possui_carro?: boolean }
+        { id: string; nome: string; telefone: string; disponibilidade: string; casa_oracao: string; possui_carro: boolean; status: string; created_at: string },
+        { id?: string; nome: string; telefone?: string; disponibilidade?: string; casa_oracao: string; possui_carro?: boolean; status?: string; created_at?: string },
+        { nome?: string; telefone?: string; disponibilidade?: string; casa_oracao?: string; possui_carro?: boolean; status?: string }
       >;
       voluntario_sessoes: Table<
         { id: string; voluntario_id: string; token_hash: string; expires_at: string; created_at: string; last_used_at: string },
