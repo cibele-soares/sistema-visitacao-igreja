@@ -150,6 +150,17 @@ export type Database = {
         { id?: string; voluntario_id: string; data: string; presente?: boolean; created_at?: string; updated_at?: string },
         { id?: string; voluntario_id?: string; data?: string; presente?: boolean; created_at?: string; updated_at?: string }
       >;
+      configuracoes_financeiras: {
+        Row: {
+          id: boolean;
+          saldo_mercado_pago: number;
+          atualizado_em: string;
+          atualizado_por: string | null;
+        };
+        Insert: { id?: boolean; saldo_mercado_pago?: number; atualizado_em?: string; atualizado_por?: string | null };
+        Update: { id?: boolean; saldo_mercado_pago?: number; atualizado_em?: string; atualizado_por?: string | null };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -200,6 +211,10 @@ export type Database = {
       voluntario_criar_alimento: {
         Args: { p_token: string; p_nome: string; p_quantidade: number; p_unidade: string; p_casa_oracao: string };
         Returns: Json;
+      };
+      definir_saldo_mercado_pago: {
+        Args: { p_valor: number };
+        Returns: Database["public"]["Tables"]["configuracoes_financeiras"]["Row"];
       };
     };
     Enums: Record<string, never>;
