@@ -20,6 +20,7 @@ const LideresPage = lazy(() => import("./pages/LideresPage"));
 const VisitasPage = lazy(() => import("./pages/VisitasPage"));
 const CestasPage = lazy(() => import("./pages/CestasPage"));
 const RegistrosPage = lazy(() => import("./pages/RegistrosPage"));
+const DuvidasPage = lazy(() => import("./pages/DuvidasPage"));
 const VoluntarioLoginPage = lazy(() => import("./pages/VoluntarioLoginPage"));
 const VoluntarioAreaPage = lazy(() => import("./pages/VoluntarioAreaPage"));
 const MeuPerfilPage = lazy(() => import("./pages/MeuPerfilPage"));
@@ -57,6 +58,7 @@ export default function App() {
                   <Route path="/visitas" element={<AdminPage><VisitasPage /></AdminPage>} />
                   <Route path="/cestas" element={<AdminPage><CestasPage /></AdminPage>} />
                   <Route path="/registros" element={<AdminPage><RegistrosPage /></AdminPage>} />
+                  <Route path="/duvidas" element={<AdminPage><DuvidasPage /></AdminPage>} />
                   <Route path="/perfil" element={<AdminPage><MeuPerfilPage /></AdminPage>} />
                   <Route path="/acesso" element={<VoluntarioLoginPage />} />
                   <Route path="/minha-area" element={<VoluntarioAreaPage />} />

@@ -343,7 +343,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const excluirVoluntario = useCallback(async (id: string) => {
-    const { error } = await supabase.from("voluntarios").delete().eq("id", id);
+    const { error } = await supabase.rpc("mover_voluntario_para_analise", { p_id: id });
     if (error) throw error;
     setVoluntarios((current) => current.filter((voluntario) => voluntario.id !== id));
     setGrupos((current) => current.map((grupo) => ({

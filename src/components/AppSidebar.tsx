@@ -1,5 +1,5 @@
 import {
-  Apple, Users, UserCheck, UsersRound, Crown, Route, ClipboardCheck, Home, LogOut, UserCircle, type LucideIcon, Church,
+  Apple, Users, UserCheck, UsersRound, Crown, Route, ClipboardCheck, Home, LogOut, UserCircle, type LucideIcon, Church, MessageCircleQuestion,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/context/AuthContext";
@@ -29,6 +29,7 @@ const items: SidebarItem[] = [
   /*{ title: "Cestas", url: "/cestas", icon: Package },*/
 
   { title: "Registros", url: "/registros", icon: ClipboardCheck },
+  { title: "Dúvidas", url: "/duvidas", icon: MessageCircleQuestion },
 ];
 
 export function AppSidebar() {

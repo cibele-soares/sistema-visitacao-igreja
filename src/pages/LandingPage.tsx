@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Users, HandHeart, ChevronRight, QrCode, MapPin, UserPlus, Home, Copy} from 'lucide-react';
+import { Heart, Users, HandHeart, ChevronRight, QrCode, MapPin, UserPlus, Home, Copy, MessageCircleQuestion} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -293,6 +293,84 @@ function IndicarPessoaForm(): React.JSX.Element {
   );
 }
 
+// ── Formulário: dúvidas ─────────────────────────────────────
+function DuvidaForm() {
+  const [nome, setNome]         = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [mensagem, setMensagem] = useState('');
+  const [enviado, setEnviado]   = useState(false);
+  const [loading, setLoading]   = useState(false);
+
+  const handleEnviar = async () => {
+    if (!telefoneValido(telefone)) { toast.error('Telefone inválido. Use (XX) XXXXX-XXXX.'); return; }
+    if (!mensagem.trim())          { toast.error('Escreva sua dúvida.'); return; }
+
+    setLoading(true);
+    const { error } = await supabase
+      .from('duvidas')
+      .insert({ nome: nome.trim(), telefone, mensagem: mensagem.trim() });
+    setLoading(false);
+    if (error) { toast.error('Erro ao enviar. Tente novamente.'); return; }
+    setEnviado(true);
+  };
+
+  const enviarOutraDuvida = () => {
+    setNome('');
+    setTelefone('');
+    setMensagem('');
+    setEnviado(false);
+  };
+
+  if (enviado) {
+    return (
+      <Card className="border-primary/30 bg-primary/5">
+        <CardContent className="py-8 text-center space-y-4">
+          <div className="text-3xl">🙏</div>
+          <p className="font-serif font-semibold">Dúvida enviada!</p>
+          <p className="text-sm text-muted-foreground">
+            Nossa equipe vai responder pelo telefone informado em breve.
+          </p>
+          <Button type="button" variant="outline" className="w-full" onClick={enviarOutraDuvida}>
+            Enviar outra dúvida
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardContent className="pt-6 space-y-4">
+        <div className="space-y-1.5">
+          <Label>Nome</Label>
+          <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Seu nome (opcional)" />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Telefone / WhatsApp *</Label>
+          <Input
+            value={telefone}
+            onChange={(e) => setTelefone(formatarTelefone(e.target.value))}
+            placeholder="(00) 00000-0000"
+            maxLength={15}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Sua dúvida *</Label>
+          <Textarea
+            value={mensagem}
+            onChange={(e) => setMensagem(e.target.value)}
+            placeholder="Escreva aqui sua dúvida…"
+            rows={3}
+          />
+        </div>
+        <Button className="w-full" onClick={handleEnviar} disabled={loading}>
+          {loading ? 'Enviando…' : 'Enviar dúvida'}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ── Página principal ──────────────────────────────────────────
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -429,6 +507,20 @@ export default function LandingPage() {
           </div>
           <VoluntarioForm />
         </div>
+      </section>
+
+      {/* DÚVIDAS */}
+      <section id="duvidas" className="max-w-lg mx-auto px-6 py-12 space-y-6">
+        <div className="text-center space-y-2">
+          <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center mx-auto">
+            <MessageCircleQuestion className="h-6 w-6 text-amber-600" />
+          </div>
+          <h2 className="text-xl font-serif font-bold">Ficou com alguma dúvida?</h2>
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+            Envie sua pergunta e nossa equipe responde pelo telefone informado.
+          </p>
+        </div>
+        <DuvidaForm />
       </section>
 
       {/* ACESSO */}

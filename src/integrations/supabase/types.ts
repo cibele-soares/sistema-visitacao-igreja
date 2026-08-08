@@ -145,6 +145,11 @@ export type Database = {
         { id?: string; voluntario_id: string; token_hash: string; expires_at: string; created_at?: string; last_used_at?: string },
         { expires_at?: string; last_used_at?: string }
       >;
+      duvidas: Table<
+        { id: string; nome: string; telefone: string; mensagem: string; status: string; created_at: string },
+        { id?: string; nome?: string; telefone: string; mensagem: string; status?: string; created_at?: string },
+        { nome?: string; telefone?: string; mensagem?: string; status?: string }
+      >;
       presencas: Table<
         { id: string; voluntario_id: string; data: string; presente: boolean; created_at: string; updated_at: string },
         { id?: string; voluntario_id: string; data: string; presente?: boolean; created_at?: string; updated_at?: string },
@@ -176,6 +181,10 @@ export type Database = {
       aprovar_voluntario_pendente: {
         Args: { p_id: string; p_codigo: string };
         Returns: Database["public"]["Tables"]["voluntarios"]["Row"];
+      };
+      mover_voluntario_para_analise: {
+        Args: { p_id: string };
+        Returns: undefined;
       };
       definir_item_cesta: {
         Args: { p_visita_id: string; p_alimento_id: string; p_quantidade: number };
