@@ -30,9 +30,9 @@ export type Database = {
         { id?: string; nome?: string; endereco?: string; telefone?: string; observacoes?: string; created_at?: string }
       >;
       voluntarios: Table<
-        { id: string; nome: string; telefone: string; disponibilidade: string; eh_lider: boolean; codigo: string; casa_oracao: string; pode_controlar_alimentos: boolean; possui_carro: boolean; created_at: string },
-        { id?: string; nome: string; telefone?: string; disponibilidade?: string; eh_lider?: boolean; codigo: string; casa_oracao: string; pode_controlar_alimentos?: boolean; possui_carro?: boolean; created_at?: string },
-        { id?: string; nome?: string; telefone?: string; disponibilidade?: string; eh_lider?: boolean; codigo?: string; casa_oracao?: string; pode_controlar_alimentos?: boolean; possui_carro?: boolean; created_at?: string }
+        { id: string; nome: string; telefone: string; disponibilidade: string; eh_lider: boolean; codigo: string; casa_oracao: string; pode_controlar_alimentos: boolean; possui_carro: boolean; idade: number | null; created_at: string },
+        { id?: string; nome: string; telefone?: string; disponibilidade?: string; eh_lider?: boolean; codigo: string; casa_oracao: string; pode_controlar_alimentos?: boolean; possui_carro?: boolean; idade?: number | null; created_at?: string },
+        { id?: string; nome?: string; telefone?: string; disponibilidade?: string; eh_lider?: boolean; codigo?: string; casa_oracao?: string; pode_controlar_alimentos?: boolean; possui_carro?: boolean; idade?: number | null; created_at?: string }
       >;
       alimentos: Table<
         { id: string; nome: string; quantidade: number; unidade: string; data_entrada: string; casa_oracao: string; inserido_por: string | null; inserido_por_voluntario: string | null; created_at: string },
@@ -136,9 +136,9 @@ export type Database = {
         { nome?: string; telefone?: string; endereco?: string; observacoes?: string; status?: string }
       >;
       voluntarios_pendentes: Table<
-        { id: string; nome: string; telefone: string; disponibilidade: string; casa_oracao: string; possui_carro: boolean; status: string; created_at: string },
-        { id?: string; nome: string; telefone?: string; disponibilidade?: string; casa_oracao: string; possui_carro?: boolean; status?: string; created_at?: string },
-        { nome?: string; telefone?: string; disponibilidade?: string; casa_oracao?: string; possui_carro?: boolean; status?: string }
+        { id: string; nome: string; telefone: string; disponibilidade: string; casa_oracao: string; possui_carro: boolean; idade: number | null; status: string; created_at: string },
+        { id?: string; nome: string; telefone?: string; disponibilidade?: string; casa_oracao: string; possui_carro?: boolean; idade?: number | null; status?: string; created_at?: string },
+        { nome?: string; telefone?: string; disponibilidade?: string; casa_oracao?: string; possui_carro?: boolean; idade?: number | null; status?: string }
       >;
       voluntario_sessoes: Table<
         { id: string; voluntario_id: string; token_hash: string; expires_at: string; created_at: string; last_used_at: string },

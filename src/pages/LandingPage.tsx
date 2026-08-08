@@ -67,6 +67,7 @@ function VoluntarioForm() {
   const [disponibilidade, setDisponibilidade] = useState('');
   const [casaOracao, setCasaOracao]       = useState('');
   const [possuiCarro, setPossuiCarro]     = useState(false);
+  const [idade, setIdade]                 = useState('');
   const [enviado, setEnviado]             = useState(false);
   const [loading, setLoading]             = useState(false);
 
@@ -75,11 +76,13 @@ function VoluntarioForm() {
     if (!telefoneValido(telefone)) { toast.error('Telefone inválido. Use (XX) XXXXX-XXXX.'); return; }
     if (!disponibilidade.trim()) { toast.error('Informe sua disponibilidade.'); return; }
     if (!casaOracao.trim())    { toast.error('Selecione a casa de oração.');   return; }
+    const idadeNum = Number(idade);
+    if (!idade.trim() || !Number.isInteger(idadeNum) || idadeNum <= 0 || idadeNum >= 120) { toast.error('Informe uma idade válida.'); return; }
 
     setLoading(true);
     const { error } = await supabase
       .from('voluntarios_pendentes')
-      .insert({ nome: nome.trim(), telefone, disponibilidade: disponibilidade.trim(), casa_oracao: casaOracao, possui_carro: possuiCarro });
+      .insert({ nome: nome.trim(), telefone, disponibilidade: disponibilidade.trim(), casa_oracao: casaOracao, possui_carro: possuiCarro, idade: idadeNum });
     setLoading(false);
     if (error) { toast.error('Erro ao enviar. Tente novamente.'); return; }
     setEnviado(true);
@@ -91,6 +94,7 @@ function VoluntarioForm() {
     setDisponibilidade('');
     setCasaOracao('');
     setPossuiCarro(false);
+    setIdade('');
     setEnviado(false);
   };
 
@@ -140,6 +144,10 @@ function VoluntarioForm() {
         <div className="space-y-1.5">
           <Label>Disponibilidade *</Label>
           <Input value={disponibilidade} onChange={(e) => setDisponibilidade(e.target.value)} placeholder="Ex: fins de semana, sábados…" />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Idade *</Label>
+          <Input type="number" min={1} max={119} value={idade} onChange={(e) => setIdade(e.target.value)} placeholder="Ex: 32" />
         </div>
         <div className="space-y-1.5">
           <Label>Casa de Oração *</Label>
